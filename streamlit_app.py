@@ -21,15 +21,12 @@ st.title('🎈 GrabCut App')
 #!/usr/bin/env python
 '''
 ===============================================================================
-# grabcut
+# Grabcut
 
 A simple program for interactively removing the background from an image using
 the grab cut algorithm and OpenCV.
 
 This code was derived from the Grab Cut example from the OpenCV project.
-
-## Usage
-    grabcut.py <input> [output]
 
 ## Operation
 
@@ -90,4 +87,7 @@ if __name__ == '__main__':
             drawing_mode=drawing_mode,
             point_display_radius=point_display_radius if drawing_mode == 'point' else 0,
             key="canvas",
+        )
+        st.download_button(
+            "Download grabcut image", image_upload, "fixed.png", "image/png"
         )
