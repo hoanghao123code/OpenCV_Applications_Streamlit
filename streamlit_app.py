@@ -98,12 +98,12 @@ if __name__ == '__main__':
                 st.write('Ảnh sau khi xử lí')
                 st.image(grabcut_result)
                 
-                result_image = Image.fromarray(grabcut_result)
-                buf = BytesIO()
-                result_image.save(buf, format = "PNG")
-                byte_im = buf.getvalue()
-                if byte_im is not None:
-                    st.download_button("Download ảnh sau khi xử lí", byte_im, 'grabcut_result.png', "image/png")
+                # result_image = Image.fromarray(grabcut_result)
+                # buf = BytesIO()
+                # result_image.save(buf, format = "PNG")
+                # byte_im = buf.getvalue()
+                # if byte_im is not None:
+                #     st.download_button("Download ảnh sau khi xử lí", byte_im, 'grabcut_result.png', "image/png")
                 
                 # ori_image = cv.imread('images/' + image_upload.name)
                 
