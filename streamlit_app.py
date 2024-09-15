@@ -10,7 +10,7 @@ import os
 
 from io import BytesIO
 from PIL import Image
-from rembg import remove
+# from rembg import remove
 from streamlit_drawable_canvas import st_canvas
 
 st.title('🎈 GrabCut App')
