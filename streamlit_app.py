@@ -57,7 +57,7 @@ if __name__ == '__main__':
         
         # canvas_result.json_data chứa thông tin các hình vẽ trên canvas
         image_ul = np.array(Image.open(image_upload))
-        if canvas_result.json_data is not None:
+        if canvas_result is not None and canvas_result.json_data is not None:
             # st.write(canvas_result.json_data)
             for obj in canvas_result.json_data["objects"]:
                 
