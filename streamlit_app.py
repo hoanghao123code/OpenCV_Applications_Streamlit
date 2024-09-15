@@ -57,6 +57,6 @@ if __name__ == '__main__':
             key="canvas",
         )
         # st.image(canvas_result.image_data)
-        # st.download_button(
-        #     "Download grabcut image", canvas_result.image_data, "fixed.png", "image/png"
-        # )
+        st.download_button(
+            "Download grabcut image", canvas_result.image_data, "fixed.png", "image/png"
+        )
