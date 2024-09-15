@@ -6,21 +6,14 @@ import cv2 as cv
 import sys
 import streamlit as st
 import tempfile
+import os
 
 from io import BytesIO
 from PIL import Image
 from rembg import remove
+from streamlit_drawable_canvas import st_canvas
 
 st.title('🎈 GrabCut App')
-
-image_upload = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
-
-def convert_image(img):
-    buf = BytesIO()
-    img.save(buf, format = "PNG")
-    byte_im = buf.getvalue()
-    return byte_im
-    
 
 
 # st.write('Hello world!')
@@ -62,184 +55,39 @@ the areas you want.  Finally, press 's' to save the result.
 
 
 
-class App():
-    BLUE  = [255, 0, 0]       # rectangle color
-    RED   = [0, 0, 255]       # PR BG
-    GREEN = [0, 255, 0]       # PR FG
-    BLACK = [0, 0, 0]         # sure BG
-    WHITE = [255, 255, 255]   # sure FG
-
-    DRAW_BG    = {'color' : BLACK, 'val' : 0}
-    DRAW_FG    = {'color' : WHITE, 'val' : 1}
-    DRAW_PR_FG = {'color' : GREEN, 'val' : 3}
-    DRAW_PR_BG = {'color' : RED,   'val' : 2}
-
-    thickness  = 3
-
-
-    def onmouse(self, event, x, y, flags, param):
-        # Draw rectangle
-        if event == cv.EVENT_RBUTTONDOWN:
-            self.rectangle = True
-            self.ix, self.iy = x,y
-
-        elif event == cv.EVENT_MOUSEMOVE:
-            if self.rectangle == True:
-                self.input = self.copy.copy()
-                cv.rectangle(self.input, (self.ix, self.iy), (x, y), self.BLUE,
-                             2)
-                self.rect = (min(self.ix, x), min(self.iy, y), abs(self.ix - x),
-                             abs(self.iy - y))
-                self.rect_or_mask = 0
-
-        elif event == cv.EVENT_RBUTTONUP:
-            self.rectangle = False
-            self.rect_over = True
-            cv.rectangle(self.input, (self.ix, self.iy), (x, y), self.BLUE, 2)
-            self.rect = (min(self.ix, x), min(self.iy, y), abs(self.ix - x),
-                         abs(self.iy - y))
-            self.rect_or_mask = 0
-            self.segment()
-
-        # Draw touchup curves
-        if event == cv.EVENT_LBUTTONDOWN:
-            if not self.rect_over: print('First draw a rectangle')
-
-            else:
-                self.drawing = True
-                cv.circle(self.input, (x,y), self.thickness,
-                          self.value['color'], -1)
-                cv.circle(self.mask, (x,y), self.thickness,
-                          self.value['val'], -1)
-
-        elif event == cv.EVENT_MOUSEMOVE:
-            if self.drawing == True:
-                cv.circle(self.input, (x, y), self.thickness,
-                          self.value['color'], -1)
-                cv.circle(self.mask, (x, y), self.thickness,
-                          self.value['val'], -1)
-
-        elif event == cv.EVENT_LBUTTONUP:
-            if self.drawing == True:
-                self.drawing = False
-                cv.circle(self.input, (x, y), self.thickness,
-                          self.value['color'], -1)
-                cv.circle(self.mask, (x, y), self.thickness,
-                          self.value['val'], -1)
-                self.segment()
-
-
-    def reset(self):
-        print('Resetting')
-
-        self.rect = (0, 0, 1, 1)
-        self.drawing = False
-        self.rectangle = False
-        self.rect_or_mask = 100
-        self.rect_over = False
-        self.value = self.DRAW_FG
-
-        self.input = self.copy.copy()
-        self.mask = np.zeros(self.input.shape[:2], dtype = np.uint8)
-        self.output = np.zeros(self.input.shape, np.uint8)
-
-
-    def crop_to_alpha(self, img):
-        x, y = self.alpha.nonzero()
-        if len(x) == 0 or len(y) == 0: return img
-        return img[np.min(x) : np.max(x), np.min(y) : np.max(y)]
-
-
-    def save(self):
-        # Apply alpha
-        b, g, r, = cv.split(self.copy)
-        img = cv.merge((b, g, r, self.alpha))
-
-        cv.imwrite(self.outfile, self.crop_to_alpha(img))
-        print('Saved')
-
-
-    def segment(self):
-        try:
-            if self.rect_or_mask == 0:
-                mask_type = cv.GC_INIT_WITH_RECT
-                self.rect_or_mask = 1
-
-            elif self.rect_or_mask == 1:
-                mask_type = cv.GC_INIT_WITH_MASK
-
-            bgdmodel = np.zeros((1, 65), np.float64)
-            fgdmodel = np.zeros((1, 65), np.float64)
-            cv.grabCut(self.copy, self.mask, self.rect, bgdmodel, fgdmodel, 1,
-                       mask_type)
-
-        except:
-            import traceback
-            traceback.print_exc()
-
-
-    def load(self):
-        self.outfile = 'grabcut.png'
-        # if len(sys.argv) == 2: filename = sys.argv[1]
-        # elif len(sys.argv) == 3: filename, self.outfile = sys.argv[1:3]
-        # else: raise Exception('Usage: grabcut.py <input> [output]')
-        # if image_upload:
-        #     # SHOW the uploaded image!
-        #     st.image(image_upload)
-        #     image = Image.open(image_upload)
-        #     fixed = remove(image)
-        #     downloadable_image = convert_image(fixed)
-        #     SHOW the improved image!
-        #     st.image(downloadable_image)
-        #     st.download_button(
-        #         "Download fixed image", downloadable_image, "fixed.png", "image/png"
-        #     )
-        # self.input    = cv.imread(filename)
-        # self.input    = cv.imread(image_upload)
-
-        self.input = cv.imread(image_upload.name)
-        self.copy   = self.input.copy()             # a copy of original image
-        self.mask   = np.zeros(self.input.shape[:2], dtype = np.uint8)
-        self.output = np.zeros(self.input.shape, np.uint8)
-        self.alpha  = np.zeros(self.input.shape[:2], dtype = np.uint8)
-
-
-    def run(self):
-        self.load()
-        self.reset()
-
-        # Input and output windows
-        # cv.namedWindow('output')
-        # cv.namedWindow('input')
-        # cv.setMouseCallback('input', self.onmouse)
-        # cv.moveWindow('input', self.input.shape[1] + 10, 90)
-        # st.image(self.input)
-
-        # print('Draw a rectangle around the object using right mouse button')
-
-        # while True:
-        #     cv.imshow('output', self.output)
-        #     cv.imshow('input',  self.input)
-        #     k = cv.waitKey(1)
-
-        #     # Key bindings
-        #     if k == 27 or k == ord('q'): break # exit
-        #     elif k == ord('0'): self.value = self.DRAW_BG
-        #     elif k == ord('1'): self.value = self.DRAW_FG
-        #     elif k == ord('2'): self.value = self.DRAW_PR_BG
-        #     elif k == ord('3'): self.value = self.DRAW_PR_FG
-        #     elif k == ord('s'): self.save()
-        #     elif k == ord('r'): self.reset()
-        #     elif k == ord('n'): self.segment()
-        #     else: continue
-
-        #     self.alpha = np.where((self.mask == 1) + (self.mask == 3), 255,
-        #                           0).astype('uint8')
-        #     img = cv.bitwise_and(self.copy, self.copy, mask = self.alpha)
-        #     self.output = self.crop_to_alpha(img)
-
-
 if __name__ == '__main__':
     print(__doc__)
-    App().run()
-    # cv.destroyAllWindows()
+    image_upload = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+    
+    if image_upload is not None:
+        st.image(image_upload)
+        drawing_mode = st.sidebar.selectbox("Drawing tool:", ("point", "freedraw", "line", "rect", "circle", "transform")
+        )
+        stroke_width = st.sidebar.slider("Stroke width: ", 1, 25, 3)
+        if drawing_mode == 'point':
+            point_display_radius = st.sidebar.slider("Point display radius: ", 1, 25, 3)
+        stroke_color = st.sidebar.color_picker("Stroke color hex: ")
+        realtime_update = st.sidebar.checkbox("Update in realtime", True)
+        
+        if not os.path.exists('images'):
+            os.makedirs('images')
+        image = Image.open(image_upload)
+        image.save('images/' + image_upload.name)
+        
+        # background_image=Image.open(image_upload.name)
+        # background_image.save(image_upload.name)
+        # Tạo thành phần canvas
+        img = cv.imread('images/' + image_upload.name)
+        canvas_result = st_canvas(
+            fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
+            stroke_width=stroke_width,
+            stroke_color=stroke_color,
+            # background_color=bg_color,
+            background_image=Image.open(image_upload) if image_upload else None,
+            update_streamlit=realtime_update,
+            height=img.shape[0],
+            width = img.shape[1],
+            drawing_mode=drawing_mode,
+            point_display_radius=point_display_radius if drawing_mode == 'point' else 0,
+            key="canvas",
+        )
