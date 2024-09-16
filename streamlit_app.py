@@ -26,8 +26,8 @@ if __name__ == '__main__':
         drawing_mode = st.sidebar.selectbox("Drawing tool:", ("point", "freedraw", "line", "rect", "circle", "transform")
         )
         stroke_width = st.sidebar.slider("Stroke width: ", 1, 25, 3)
-        if drawing_mode == 'point':
-            point_display_radius = st.sidebar.slider("Point display radius: ", 1, 25, 3)
+        # if drawing_mode == 'point':
+        #     point_display_radius = st.sidebar.slider("Point display radius: ", 1, 25, 3)
         stroke_color = st.sidebar.color_picker("Stroke color hex: ")
         realtime_update = st.sidebar.checkbox("Update in realtime", True)
         
