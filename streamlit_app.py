@@ -50,7 +50,7 @@ if __name__ == '__main__':
             height=img.shape[0],
             width = img.shape[1],
             drawing_mode=drawing_mode,
-            point_display_radius=point_display_radius if drawing_mode == 'point' else 0,
+            # point_display_radius=point_display_radius if drawing_mode == 'point' else 0,
             key="canvas",
         )
         # st.image(canvas_result.image_data)
