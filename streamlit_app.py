@@ -26,8 +26,8 @@ if __name__ == '__main__':
         drawing_mode = st.sidebar.selectbox("Drawing tool:", ("point", "freedraw", "line", "rect", "circle", "transform")
         )
         stroke_width = st.sidebar.slider("Stroke width: ", 1, 25, 3)
-        # if drawing_mode == 'point':
-        #     point_display_radius = st.sidebar.slider("Point display radius: ", 1, 25, 3)
+        if drawing_mode == 'point':
+            point_display_radius = st.sidebar.slider("Point display radius: ", 1, 25, 3)
         stroke_color = st.sidebar.color_picker("Stroke color hex: ")
         realtime_update = st.sidebar.checkbox("Update in realtime", True)
         
@@ -48,10 +48,10 @@ if __name__ == '__main__':
             # background_color=bg_color,
             background_image=Image.open(image_upload) if image_upload else None,
             update_streamlit=realtime_update,
-            height = 150,
-            width = 150,
+            height = img.shape[0],
+            width = img.shape[1],
             drawing_mode=drawing_mode,
-            # point_display_radius=point_display_radius if drawing_mode == 'point' else 0,
+            point_display_radius=point_display_radius if drawing_mode == 'point' else 0,
             key="canvas",
         )
         # st.image(canvas_result.image_data)
