@@ -40,6 +40,7 @@ if __name__ == '__main__':
         # background_image.save(image_upload.name)
         # Tạo thành phần canvas
         img = cv.imread('images/' + image_upload.name)
+        
         canvas_result = st_canvas(
             fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
             stroke_width=stroke_width,
@@ -47,8 +48,8 @@ if __name__ == '__main__':
             # background_color=bg_color,
             background_image=Image.open(image_upload) if image_upload else None,
             update_streamlit=realtime_update,
-            height=img.shape[0],
-            width = img.shape[1],
+            height = img.shape[0] if img is not None else 150,
+            width = img.shape[1] if img is not None else 150,
             drawing_mode=drawing_mode,
             # point_display_radius=point_display_radius if drawing_mode == 'point' else 0,
             key="canvas",
