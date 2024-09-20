@@ -1,3 +1,9 @@
-streamlit>=1.26.0
+altair
+numpy
+pandas
+pydeck
+streamlit
 opencv-python-headless
-streamlit_drawable_canvas==0.8.0
+streamlit-drawable-canvas==0.8.0
+svgpathtools
+svgwrite
