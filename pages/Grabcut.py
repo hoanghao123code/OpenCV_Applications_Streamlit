@@ -42,7 +42,9 @@ if __name__ == '__main__':
         img = cv.imread('images/' + image_upload.name)
         
         canvas_result = st_canvas(
-            fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
+            # fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
+            fill_color="",  # Fixed fill color with some opacity
+            
             # stroke_width=stroke_width,
             # stroke_color=stroke_color,
             # background_color=bg_color,
