@@ -41,12 +41,13 @@ if __name__ == '__main__':
         # Tạo thành phần canvas
         img = cv.imread('images/' + image_upload.name)
         
+        # st.write("spdops")
         canvas_result = st_canvas(
-            # fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
-            fill_color="",  # Fixed fill color with some opacity
+            fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
+            # fill_color="",  # Fixed fill color with some opacity
             
-            # stroke_width=stroke_width,
-            # stroke_color=stroke_color,
+            stroke_width=stroke_width,
+            stroke_color=stroke_color,
             # background_color=bg_color,
             background_image=image,
             update_streamlit=realtime_update,
@@ -56,7 +57,6 @@ if __name__ == '__main__':
             # point_display_radius=point_display_radius if drawing_mode == 'point' else 0,
             key="canvas",
         )
-        st.write("spdops")
         # canvas_result.json_data chứa thông tin các hình vẽ trên canvas
         image_ul = np.array(Image.open(image_upload))
         if canvas_result is not None and canvas_result.json_data is not None:
