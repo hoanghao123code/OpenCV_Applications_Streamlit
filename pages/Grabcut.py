@@ -16,14 +16,14 @@ from streamlit_drawable_canvas import st_canvas
 st.title('🎈Hoang Hao GrabCut App')
 
 
-if __name__ == '__main__':
+def run():
     print(__doc__)
     image_upload = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
     
     if image_upload is not None:
         st.write("Ảnh gốc")
         st.image(image_upload)
-        drawing_mode = st.sidebar.selectbox("Drawing tool:", ("point", "freedraw", "line", "rect", "circle", "transform")
+        drawing_mode = st.sidebar.selectbox("Drawing tool:", ("rect", "freedraw", "line", "circle", "transform")
         )
         stroke_width = st.sidebar.slider("Stroke width: ", 1, 25, 3)
         if drawing_mode == 'point':
@@ -107,4 +107,4 @@ if __name__ == '__main__':
                 #     st.download_button("Download ảnh sau khi xử lí", byte_im, 'grabcut_result.png', "image/png")
                 
                 # ori_image = cv.imread('images/' + image_upload.name)
-                
+run()  
