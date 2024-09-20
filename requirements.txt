@@ -4,6 +4,6 @@ pandas
 pydeck
 streamlit
 opencv-python-headless
-streamlit-drawable-canvas
+streamlit-drawable-canvas==0.7.0
 svgpathtools
 svgwrite
