@@ -46,7 +46,7 @@ if __name__ == '__main__':
             stroke_width=stroke_width,
             stroke_color=stroke_color,
             # background_color=bg_color,
-            background_image=Image.open(image_upload) if image_upload else None,
+            background_image=image,
             update_streamlit=realtime_update,
             height = img.shape[0],
             width = img.shape[1],
@@ -54,12 +54,10 @@ if __name__ == '__main__':
             # point_display_radius=point_display_radius if drawing_mode == 'point' else 0,
             key="canvas",
         )
-        # st.image(canvas_result.image_data)
         
         # canvas_result.json_data chứa thông tin các hình vẽ trên canvas
         image_ul = np.array(Image.open(image_upload))
         if canvas_result is not None and canvas_result.json_data is not None:
-            # st.write(canvas_result.json_data)
             for obj in canvas_result.json_data["objects"]:
                 
                 # Tọa độ x, y trái dưới
