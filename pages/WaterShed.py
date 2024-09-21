@@ -77,29 +77,29 @@ def img_training(idx1, idx2):
     img_gt1 = cv.imread(path_gt[idx1], cv.IMREAD_GRAYSCALE)
     img_gt2 = cv.imread(path_gt[idx2], cv.IMREAD_GRAYSCALE)
     
-    mask_gt1 = img_gt1.copy()
-    img_gt1[mask_gt1 == 85] = 255
-    img_gt1[mask_gt1 != 85] = 0
-    
-    mask_gt2 = img_gt2.copy()
-    img_gt2[mask_gt2 == 85] = 255
-    img_gt2[mask_gt2 != 85] = 0
-    col1.image(img_ori1)
-    col1.markdown("#### " + list_image[idx1])
-    col1.image(img_ori2)
-    col1.markdown("#### " + list_image[idx2])
-    
-    col2.markdown("### Ảnh ground truth")
-    col2.image(img_gt1)
-    col2.markdown("#### " + list_image[idx1])
-    col2.image(img_gt2)
-    col2.markdown("#### " + list_image[idx2])
+    if img_gt1 is not None and img_gt2 is not None:
+        mask_gt1 = img_gt1.copy()
+        img_gt1[mask_gt1 == 85] = 255
+        img_gt1[mask_gt1 != 85] = 0
+        
+        mask_gt2 = img_gt2.copy()
+        img_gt2[mask_gt2 == 85] = 255
+        img_gt2[mask_gt2 != 85] = 0
+        col1.image(img_ori1)
+        col1.markdown("#### " + list_image[idx1])
+        col1.image(img_ori2)
+        col1.markdown("#### " + list_image[idx2])
+        
+        col2.markdown("### Ảnh ground truth")
+        col2.image(img_gt1)
+        col2.markdown("#### " + list_image[idx1])
+        col2.image(img_gt2)
+        col2.markdown("#### " + list_image[idx2])
     
 
 def calc():
     kernels = [(3, 3), (5, 5), (7, 7)]
     ratio_thresh = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
-    print(kernels[0])
     list_IoU = []
     for kernel in kernels:
         for ratio in ratio_thresh:
@@ -108,30 +108,30 @@ def calc():
                 img_gt = cv.imread(path_gt[i], cv.IMREAD_GRAYSCALE)
                 if img_gt is not None:
                     mask_gt = img_gt.copy()
-                img_gt[mask_gt == 85] = 255
-                img_gt[mask_gt != 85] = 0
-                # st.image(img_gt, channels = 'gray')
-                
-                markers = marker(path[i], kernel, ratio)
-                num_labels = np.unique(markers)
-                img_bg = cv.imread(path[i], cv.IMREAD_GRAYSCALE)
-                img_bg[img_bg != 0] = 0
-                for labels in num_labels:
-                    if labels == -1:
-                        continue
-                    id = np.where(markers == labels)
-                    x_min = min(id[0])
-                    x_max = max(id[0])
+                    img_gt[mask_gt == 85] = 255
+                    img_gt[mask_gt != 85] = 0
+                    # st.image(img_gt, channels = 'gray')
                     
-                    y_min = min(id[1])
-                    y_max = max(id[1])
-                    
-                    height = (x_max - x_min) / img_bg.shape[0]
-                    width = (y_max - y_min) / img_bg.shape[1]
-                    if height >= 0.3 and height <= 0.6 and width >= 0.0 and width <= 0.3:
-                        img_bg[markers == labels] = 255
-                # st.image(img_bg)
-                list_IoU.append(IoU(img_bg, img_gt))
+                    markers = marker(path[i], kernel, ratio)
+                    num_labels = np.unique(markers)
+                    img_bg = cv.imread(path[i], cv.IMREAD_GRAYSCALE)
+                    img_bg[img_bg != 0] = 0
+                    for labels in num_labels:
+                        if labels == -1:
+                            continue
+                        id = np.where(markers == labels)
+                        x_min = min(id[0])
+                        x_max = max(id[0])
+                        
+                        y_min = min(id[1])
+                        y_max = max(id[1])
+                        
+                        height = (x_max - x_min) / img_bg.shape[0]
+                        width = (y_max - y_min) / img_bg.shape[1]
+                        if height >= 0.3 and height <= 0.6 and width >= 0.0 and width <= 0.3:
+                            img_bg[markers == labels] = 255
+                    # st.image(img_bg)
+                    list_IoU.append(IoU(img_bg, img_gt))
     list_IoU = np.array(list_IoU)
     kernel_num = np.array([3, 5, 7, 9, 11, 13, 15])
     ratio_num = np.array([0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0])
