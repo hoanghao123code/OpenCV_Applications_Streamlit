@@ -106,8 +106,8 @@ def calc():
             for i in range(2):
                 # Ground truth
                 img_gt = cv.imread(path_gt[i], cv.IMREAD_GRAYSCALE)
-                mask_gt = img_gt.copy()
-                
+                if img_gt is not None:
+                    mask_gt = img_gt.copy()
                 img_gt[mask_gt == 85] = 255
                 img_gt[mask_gt != 85] = 0
                 # st.image(img_gt, channels = 'gray')
@@ -152,7 +152,7 @@ def calc():
 
     ax.set_xlabel('Ratio')
     ax.set_ylabel('IoU')    
-    ax.set_title('Biểu đồ IoU theo Ratio thresh và Kernel của ảnh ')  
+    ax.set_title('Biểu đồ IoU theo Ratio thresh và Kernel của ảnh 1xemay278')  
     ax.legend()
 
     fig2, ax2= plt.subplots()
@@ -162,13 +162,11 @@ def calc():
 
     ax2.set_xlabel('Ratio')
     ax2.set_ylabel('IoU')    
-    ax2.set_title('Biểu đồ IoU theo Ratio thresh và Kernel')  
+    ax2.set_title('Biểu đồ IoU theo Ratio thresh và Kernel của ảnh 1xemay544')  
     ax2.legend()
 
     c1.pyplot(fig1)
     c2.pyplot(fig2)
-    print(list_IoU)
-            
 
 def run():
     st.markdown("## 1. Tập Train và Test")
