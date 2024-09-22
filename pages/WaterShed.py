@@ -283,8 +283,14 @@ def run():
     st.markdown("### 1.2 Tập Test")
     img_training(2, 3)
     st.markdown("## 2. Lựa chọn các tham số phù hợp trong quá trình Train với thuật toán WaterShed Segmentation")
+    st.markdown("### * Các tham số được sử dụng:")
     st.markdown("####  - Kernel = [(3, 3), (5, 5), (7, 7)]")
     st.markdown("####  - Hệ số nhân sử dụng trong tính toán ngưỡng: 0.00, 0.04, 0.08,... 1.0")
+    st.markdown("### * Độ đo: IoU")
+    # path_IoU_img = './images/image1.png'
+    # image_IoU = cv.imread(cv.imread(path_IoU_img))
+    # st.image(image_IoU)
+    print(os.path.exists('./images/image1.png')) 
     if st.button("# Click vào đây để tiến hành huấn luyện"):
         with st.spinner("Đang xử lí..."):
             calc()
