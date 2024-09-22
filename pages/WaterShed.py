@@ -14,7 +14,7 @@ from PIL import Image
 from streamlit_drawable_canvas import st_canvas
 import matplotlib.pyplot as plt
 
-st.title("🎈Hoang Hao WaterShed App")
+st.title("🎈Hoang Hao WaterShed Segmentation App")
 
 def IoU(mask_pred, mask_gt):
     # mask_pred = [mask_pred > 0].astype(np.uint8)
