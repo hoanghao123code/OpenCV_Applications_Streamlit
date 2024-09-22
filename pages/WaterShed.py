@@ -91,11 +91,16 @@ def img_training(idx1, idx2):
     img_gt1 = list_image_gt[idx1]
     img_gt2 = list_image_gt[idx2]
     # Ảnh nhị phân ground truth
-    mask_gt1 = img_gt1.copy()
+   
+    mask_gt1 = 0 
+    if img_gt1 is not None:
+        mask_gt1 = img_gt1.copy()
     img_gt1[mask_gt1 == 85] = 255
     img_gt1[mask_gt1 != 85] = 0
     
-    mask_gt2 = img_gt2.copy()
+    mask_gt2 = 0
+    if mask_gt2 is not None:
+        mask_gt2 = img_gt2.copy()
     img_gt2[mask_gt2 == 85] = 255
     img_gt2[mask_gt2 != 85] = 0
     
@@ -127,7 +132,9 @@ def calc():
             for i in range(2):
                 # Ground truth
                 img_gt = cv.imread(path_gt[i], cv.IMREAD_GRAYSCALE)
-                mask_gt = img_gt.copy()
+                mast_gt = 0
+                if img_gt is not None:
+                    mask_gt = img_gt.copy()
                 img_gt[mask_gt == 85] = 255
                 img_gt[mask_gt != 85] = 0
                 
@@ -281,6 +288,6 @@ def run():
     if st.button("# Click vào đây để tiến hành huấn luyện"):
         with st.spinner("Đang xử lí..."):
             calc()
-if (len(list_images) > 0):
+if len(list_images) > 0:
     run()
 
