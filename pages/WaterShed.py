@@ -77,7 +77,6 @@ def marker(idx_image, kernels, ratio_thresh):
     ret, markers = cv.connectedComponents(sure_foreground)
     markers = markers + 1
     markers[unknown == 255] = 0
-
     markers = cv.watershed(image = img_bgr, markers = markers)
     return markers
 
@@ -170,7 +169,6 @@ def calc():
     img2_IoU_kernel5 = list_IoU_img2[25:50]
     img2_IoU_kernel7 = list_IoU_img2[50:100]
     
-    c1, c2 = st.columns(2)
     fig1, ax = plt.subplots()
     ax.plot(ratio_thresh, IoU_kernel3, label='Kernel=3')
     ax.plot(ratio_thresh, IoU_kernel5, label='Kernel=5')
@@ -190,7 +188,7 @@ def calc():
     ax2.set_ylabel('IoU')    
     ax2.set_title('Biểu đồ IoU theo Ratio thresh và Kernel của ảnh 1xemay544')  
     ax2.legend()
-
+    c1, c2 = st.columns(2)
     c1.pyplot(fig1)
     c2.pyplot(fig2)
     
