@@ -281,5 +281,6 @@ def run():
     if st.button("# Click vào đây để tiến hành huấn luyện"):
         with st.spinner("Đang xử lí..."):
             calc()
-run()
+if (len(list_images) > 0):
+    run()
 
