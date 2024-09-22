@@ -99,7 +99,7 @@ def img_training(idx1, idx2):
     img_gt1[mask_gt1 != 85] = 0
     
     mask_gt2 = 0
-    if mask_gt2 is not None:
+    if img_gt2 is not None:
         mask_gt2 = img_gt2.copy()
     img_gt2[mask_gt2 == 85] = 255
     img_gt2[mask_gt2 != 85] = 0
