@@ -172,21 +172,26 @@ def image_with_other_thesh(i, kernels, thresh, num_labels):
     cot3.image(lst_pred[1], caption="Groundtruth của ảnh")
     cot4.image(lst_pred[2], caption="Groundtruth của ảnh")
     cot5.image(lst_pred[3], caption="Groundtruth của ảnh")
-    
+
+def get_with_Kernel(lst, x):
+    x1 = lst[ :x]
+    x2 = lst[x : 2 * x]
+    x3 = lst[2 * x : 3 * x]
+    return x1, x2, x3
+
 def Plot_IoU(IoU_1, IoU_2, thresh):
     # Plot theo IoU
-    IoU_kernel3 = IoU_1[:20]
-    IoU_kernel5 = IoU_1[20:40]
-    IoU_kernel7 = IoU_1[40:60]
+    x1, x2, x3 = get_with_Kernel(IoU_1, 20)
+    y1, y2, y3 = get_with_Kernel(IoU_2, 20)
    
     img2_IoU_kernel3 = IoU_2[:20]
     img2_IoU_kernel5 = IoU_2[20:40]
     img2_IoU_kernel7 = IoU_2[40:60]
     
     fig1, ax = plt.subplots()
-    ax.plot(thresh, IoU_kernel3, label='Kernel=3')
-    ax.plot(thresh, IoU_kernel5, label='Kernel=5')
-    ax.plot(thresh, IoU_kernel7, label='Kernel=7')
+    ax.plot(thresh, x1, label='Kernel = (3, 3)')
+    ax.plot(thresh, x2, label='Kernel = (5, 5)')
+    ax.plot(thresh, x3, label='Kernel = (7, 7)')
 
     ax.set_xlabel('Threshold')
     ax.set_ylabel('IoU')    
@@ -194,9 +199,9 @@ def Plot_IoU(IoU_1, IoU_2, thresh):
     ax.legend()
 
     fig2, ax2= plt.subplots()
-    ax2.plot(thresh, img2_IoU_kernel3, label='Kernel = (3, 3)')
-    ax2.plot(thresh, img2_IoU_kernel5, label='Kernel = (5, 5)')
-    ax2.plot(thresh, img2_IoU_kernel7, label='Kernel = (7, 7)')
+    ax2.plot(thresh, y1, label='Kernel = (3, 3)')
+    ax2.plot(thresh, y2, label='Kernel = (5, 5)')
+    ax2.plot(thresh, y3, label='Kernel = (7, 7)')
 
     ax2.set_xlabel('Threshold')
     ax2.set_ylabel('IoU')    
@@ -209,24 +214,19 @@ def Plot_IoU(IoU_1, IoU_2, thresh):
 def Plot_Dice(lst_dice_1, lst_dice_2, thresh):
     st.markdown("#### * Độ đo: Dice Coefficient")
     image_dice = Image.open('./images/dice_coefficient.png')
-    # image_dicee = cv.cvtColor(image_dice, cv.COLOR_BGR2RGB)
     st.image(image_dice)
+    
     #Plot theo Dice coefficient
     lst_dice_1 = np.array(lst_dice_1)
     lst_dice_2 = np.array(lst_dice_2)
     
-    kernel_3_i1 = lst_dice_1[:20]
-    kernel_5_i1 = lst_dice_1[20:40]
-    kernel_7_i1 = lst_dice_1[40:60]
-    
-    kernel_3_i2 = lst_dice_2[:20]
-    kernel_5_i2 = lst_dice_2[20:40]
-    kernel_7_i2 = lst_dice_2[40:60]
+    x1, x2, x3 = get_with_Kernel(lst_dice_1, 20)
+    y1, y2, y3 = get_with_Kernel(lst_dice_2, 20)
     
     fi1, axis1 = plt.subplots()
-    axis1.plot(thresh, kernel_3_i1, label='Kernel = (3, 3)')
-    axis1.plot(thresh, kernel_5_i1, label='Kernel = (5, 5)')
-    axis1.plot(thresh, kernel_7_i1, label='Kernel = (7, 7)')
+    axis1.plot(thresh, x1, label='Kernel = (3, 3)')
+    axis1.plot(thresh, x2, label='Kernel = (5, 5)')
+    axis1.plot(thresh, x3, label='Kernel = (7, 7)')
     axis1.set_xlabel('Threshold')
     axis1.set_ylabel('Dice coefficient')
     axis1.set_title('Biểu đồ Dice theo Threshold và Kernel của ảnh 1xemay278')
@@ -234,9 +234,9 @@ def Plot_Dice(lst_dice_1, lst_dice_2, thresh):
     
     
     fi2, axis2 = plt.subplots()
-    axis2.plot(thresh, kernel_3_i2, label='Kernel = (3, 3)')
-    axis2.plot(thresh, kernel_5_i2, label='Kernel = (5, 5)')
-    axis2.plot(thresh, kernel_7_i2, label='Kernel = (7, 7)')
+    axis2.plot(thresh, y1, label='Kernel = (3, 3)')
+    axis2.plot(thresh, y2, label='Kernel = (5, 5)')
+    axis2.plot(thresh, y3, label='Kernel = (7, 7)')
     axis2.set_xlabel('Threshold')
     axis2.set_ylabel('Dice coefficient')
     axis2.set_title('Biểu đồ Dice theo Threshold và Kernel của ảnh 1xemay544')
@@ -246,11 +246,7 @@ def Plot_Dice(lst_dice_1, lst_dice_2, thresh):
     coll1.pyplot(fi1)
     coll2.pyplot(fi2)
 
-def get_with_Kernel(lst, x):
-    x1 = lst[ :x]
-    x2 = lst[x : 2 * x]
-    x3 = lst[2 * x : 3 * x]
-    return x1, x2, x3
+
 def best_para(lst_IoU_1, lst_IoU_2, lst_dice_1, lst_dice_2, lst_thresh):
     
     # Lấy độ đo IoU của Kernel 3, 5, 7
