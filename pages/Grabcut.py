@@ -21,7 +21,7 @@ def run():
     image_upload = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
     
     if image_upload is not None:
-        drawing_mode = st.sidebar.selectbox("Drawing tool:", ("rect", "freedraw", "line")
+        drawing_mode = st.sidebar.selectbox("Drawing tool:", ("rect")
         )
         stroke_width = st.sidebar.slider("Stroke width: ", 1, 25, 3)
         # if drawing_mode == 'point':

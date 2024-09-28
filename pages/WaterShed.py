@@ -17,7 +17,7 @@ from PIL import Image
 from streamlit_drawable_canvas import st_canvas
 import matplotlib.pyplot as plt
 
-st.title("🎈Hoang Hao WaterShed Segmentation App")
+st.title("🎈WaterShed Segmentation App")
 
 def IoU(mask_pred, mask_gt):
     # mask_pred = [mask_pred > 0].astype(np.uint8)
@@ -136,43 +136,6 @@ def img_training(idx1, idx2):
     col2.markdown(f'   <p style="text-indent: 100px;"> <span style = "color:red; font-size:22px;"> {list_image[idx2]}</span>', unsafe_allow_html=True)
     
 
-def image_with_other_thesh(i, kernels, thresh, num_labels):
-    lst_pred = []
-    img_gt = cv.imread(path_gt[i], cv.IMREAD_GRAYSCALE)
-    mask_gt = img_gt.copy()
-    img_gt[mask_gt == 85] = 255
-    img_gt[mask_gt != 85] = 0
-    for kernel in kernels:
-    # Ground truth
-        # Marker
-        markers = marker(i, kernel, thresh)
-        num_labels = np.unique(markers)
-        img_bg = cv.imread(path[i], cv.IMREAD_GRAYSCALE)
-        img_bg[img_bg != 0] = 0
-        
-        # Tô màu cho từng kí tự của ảnh
-        for labels in num_labels:
-            if labels == -1:    
-                continue
-            id = np.where(markers == labels)
-            x_min = min(id[0])
-            x_max = max(id[0])
-            
-            y_min = min(id[1])
-            y_max = max(id[1])
-            
-            height = (x_max - x_min) / img_bg.shape[0]
-            width = (y_max - y_min) / img_bg.shape[1]
-            if height >= 0.3 and height <= 0.6 and width >= 0.0 and width <= 0.3:
-                img_bg[markers == labels] = 255
-        lst_pred.append(img_bg)
-    cot1, cot2, cot3, cot4, cot5 = st.columns(5)
-    cot1.image(img_bg, caption="Ảnh 1xemay278 trong tập train")
-    cot2.image(lst_pred[0], caption="Groundtruth của ảnh")
-    cot3.image(lst_pred[1], caption="Groundtruth của ảnh")
-    cot4.image(lst_pred[2], caption="Groundtruth của ảnh")
-    cot5.image(lst_pred[3], caption="Groundtruth của ảnh")
-
 def get_with_Kernel(lst, x):
     x1 = lst[ :x]
     x2 = lst[x : 2 * x]
@@ -212,7 +175,8 @@ def Plot_IoU(IoU_1, IoU_2, thresh):
     c2.pyplot(fig2)
 
 def Plot_Dice(lst_dice_1, lst_dice_2, thresh):
-    st.markdown("#### * Độ đo: Dice Coefficient")
+    # st.markdown("#### * Độ đo: Dice Coefficient")
+    st.markdown(f'  <span style = "color:blue; font-size:24px;"> * Độ đo: Dice Coefficient </span>', unsafe_allow_html=True)
     image_dice = Image.open('./images/dice_coefficient.png')
     st.image(image_dice)
     
@@ -285,10 +249,12 @@ def best_para(lst_IoU_1, lst_IoU_2, lst_dice_1, lst_dice_2, lst_thresh):
     st.markdown(f"######  - Threshold = {lst_thresh[id[0][0]]}")
     return kernel_best, lst_thresh[id[0][0]]
 
-def Apply_best_Para(best_kernel, best_thresh):
+def Apply_best_Para(best_kernel, best_thresh, id_1, id_2):
     ret = []
+    dice = []
     watershed_res = []
-    for i in range(2, 4, 1):
+    ground_truth = []
+    for i in range(id_1, id_2, 1):
     # Ground truth
         img_gt = cv.imread(path_gt[i], cv.IMREAD_GRAYSCALE)
         mask_gt = img_gt.copy()
@@ -326,16 +292,72 @@ def Apply_best_Para(best_kernel, best_thresh):
         img_ground[img_ground == 255] = 1
         img_pred[img_pred == 255] = 1
         watershed_res.append(img_bg)
+        ground_truth.append(img_gt)
         ret.append(IoU(img_pred, img_ground))
+        dice.append(Dice_coefficient(img_pred, img_ground))
+    return watershed_res, ground_truth, ret, dice
+
+def image_with_other_thesh(i, kernels, thresh, num_labels):
+    lst_pred = []
+    img_gt = cv.imread(path_gt[i], cv.IMREAD_GRAYSCALE)
+    mask_gt = img_gt.copy()
+    img_gt[mask_gt == 85] = 255
+    img_gt[mask_gt != 85] = 0
+    lst_pred.append(img_gt)
+    for kernel in kernels:
+    # Ground truth
+        # Marker
+        markers = marker(i, kernel, thresh)
+        num_labels = np.unique(markers)
+        img_bg = cv.imread(path[i], cv.IMREAD_GRAYSCALE)
+        img_bg[img_bg != 0] = 0
+        
+        # Tô màu cho từng kí tự của ảnh
+        for labels in num_labels:
+            if labels == -1:    
+                continue
+            id = np.where(markers == labels)
+            x_min = min(id[0])
+            x_max = max(id[0])
+            
+            y_min = min(id[1])
+            y_max = max(id[1])
+            
+            height = (x_max - x_min) / img_bg.shape[0]
+            width = (y_max - y_min) / img_bg.shape[1]
+            if height >= 0.3 and height <= 0.6 and width >= 0.0 and width <= 0.3:
+                img_bg[markers == labels] = 255
+        lst_pred.append(img_bg)
+    cot1, cot2, cot3, cot4, cot5 = st.columns(5)
+    cot1.image(list_images[i], caption=f"{list_image[i]} trong tập train")
+    cot2.image(lst_pred[0], caption="Groundtruth")
+    cot3.image(lst_pred[1], caption="Mask với Kernel = 3")
+    cot4.image(lst_pred[2], caption="Mask với Kernel = 5")
+    cot5.image(lst_pred[3], caption="Mask với Kernel = 7")
+
+def Mask_of_Train(kernels, num_labels):
+    st.markdown(f"#### 2.1 Minh họa Mask của tập Train theo từng tham số khác nhau")
+    thresh = st.slider("Chọn ngưỡng Thresh: ", 0.0, 0.4, 0.0)
+    image_with_other_thesh(0, kernels, thresh, num_labels)
+    image_with_other_thesh(1, kernels, thresh, num_labels)
+    
+
+def Result_of_Test(best_kernel, best_thresh):
+    watershed_res, ground_truth, ret, dice = Apply_best_Para(best_kernel, best_thresh, 2, 4)
     st.markdown(f"#### 2.2 Kết quả khi áp dụng các chỉ số vừa tìm được vào tập Test")
     cc1, cc2 = st.columns(2)
-    cc1.image(watershed_res[0])
-    # col1.markdown(f'   <p style="text-indent: 110px;"> <span style = "color:red; font-size:22px;"> {list_image[idx1]}</span>', unsafe_allow_html=True)
+    #Plot Test1
+    cc1.image(ground_truth[0])
+    cc1.markdown(f'   <p style="text-indent: 40px;"> <span style = "color:red; font-size:22px;"> Ground truth {list_image[2]}  </span>', unsafe_allow_html=True)
+    cc2.image(watershed_res[0])
+    cc2.markdown(f'   <p style="text-indent: 90px;"> <span style = "color:red; font-size:22px;"> IoU = {ret[1]:.2f}, Dice = {dice[1]:.2f} </span>', unsafe_allow_html=True)
     
-    cc1.markdown(f'   <p style="text-indent: 110px;"> <span style = "color:red; font-size:22px;"> IoU = {ret[0]:.2f} </span>', unsafe_allow_html=True)
+    #Plot Test2t
+    cc1.image(ground_truth[1])
+    cc1.markdown(f'   <p style="text-indent: 40px;"> <span style = "color:red; font-size:22px;"> Ground truth {list_image[3]} </span>', unsafe_allow_html=True)
     cc2.image(watershed_res[1])
-    cc2.markdown(f'   <p style="text-indent: 130px;"> <span style = "color:red; font-size:22px;"> IoU = {ret[1]:.2f} </span>', unsafe_allow_html=True)
-
+    cc2.markdown(f'   <p style="text-indent: 90px;"> <span style = "color:red; font-size:22px;"> IoU = {ret[1]:.2f}, Dice = {dice[1]:.2f} </span>', unsafe_allow_html=True)
+    
 def calc():   
     # Các tham số
     kernels = [(3, 3), (5, 5), (7, 7)]
@@ -403,24 +425,22 @@ def calc():
     # Tìm tham số tốt nhất
     
     best_kernel, best_thresh = best_para(lst_IoU_1, lst_IoU_2, lst_dice_1, lst_dice_2, lst_thresh)
-    Apply_best_Para(best_kernel, best_thresh)
-    return "Xong"
+    Mask_of_Train(kernels, num_labels)
+    Result_of_Test(best_kernel, best_thresh)
+    
 
-# async def run_progress(duration):
+# def run_progress(duration):
 #     progress_bar = st.progress(0)
 #     for i in range(100):
-#         await asyncio.sleep(duration / 100)
+#         time.sleep(duration / 100)
 #         progress_bar.progress(i + 1)
 
-# async def process():
-#     # calc_thread = threading.Thread(target=calc)
-#     # calc_thread.start()
-#     # run_progress(24)
-#     # calc_thread.join()
-#     await asyncio.gather(
-#         calc(),
-#         run_progress(24)
-#     )
+# def process():
+#     calc_thread = threading.Thread(target=calc)
+#     calc_thread.start()
+#     run_progress(24)
+#     calc_thread.join()
+    
 def run():
     st.markdown("### 1. Tập Train và Test")
     st.markdown("#### 1.1 Tập Train")
@@ -431,10 +451,12 @@ def run():
     st.markdown("##### Các tham số được sử dụng")
     st.write("- Kernel = [(3, 3), (5, 5), (7, 7)]" )
     st.write("- Threshold = [0.00, 0.02, ..., 0.4]")
-    st.markdown("#### * Độ đo: IoU")
+    # st.markdown("#### * Độ đo: IoU")
+    st.markdown(f' <span style = "color:blue; font-size:24px;"> * Độ đo: IoU </span>', unsafe_allow_html=True)
     st.image(image_IoU, width=350)
-    # asyncio.run(process())
-    calc()
+    with st.spinner("Đang huấn luyện..."):
+        calc()
+    # process()
 
 if len(list_images) > 0:
     run()
