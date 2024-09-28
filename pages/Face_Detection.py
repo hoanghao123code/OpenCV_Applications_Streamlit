@@ -56,26 +56,26 @@ import matplotlib.pyplot as plt
 import streamlit as st
 
 # Reading the image 
-img = cv2.imread('D:\\OpenCV\\Grabcut\\Grabcut_Streamlit\\images\\images.png') 
-# Converting image to grayscale 
-gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
+# img = cv2.imread('D:\\OpenCV\\Grabcut\\Grabcut_Streamlit\\images\\images.png') 
+# # Converting image to grayscale 
+# gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
 
-# Loading the required haar-cascade xml classifier file 
-haar_cascade = cv2.CascadeClassifier('D:\\OpenCV\\WaterShed\\haarcascade_frontalface_default.xml') 
-if haar_cascade.empty():
-    print("Không thể mở tệp Haar Cascade. Vui lòng kiểm tra đường dẫn.")
-else:
-    print("Tệp Haar Cascade đã được mở thành công.")
-# Applying the face detection method on the grayscale image 
-faces_rect = haar_cascade.detectMultiScale(gray_img, 1.1, 9) 
+# # Loading the required haar-cascade xml classifier file 
+# haar_cascade = cv2.CascadeClassifier('D:\\OpenCV\\WaterShed\\haarcascade_frontalface_default.xml') 
+# if haar_cascade.empty():
+#     print("Không thể mở tệp Haar Cascade. Vui lòng kiểm tra đường dẫn.")
+# else:
+#     print("Tệp Haar Cascade đã được mở thành công.")
+# # Applying the face detection method on the grayscale image 
+# faces_rect = haar_cascade.detectMultiScale(gray_img, 1.1, 9) 
 
 
 
-# Iterating through rectangles of detected faces 
-for (x, y, w, h) in faces_rect: 
-	cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2) 
+# # Iterating through rectangles of detected faces 
+# for (x, y, w, h) in faces_rect: 
+# 	cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2) 
 
-plt.imshow(img) 
-plt.axis('off')
+# plt.imshow(img) 
+# plt.axis('off')
 
 
