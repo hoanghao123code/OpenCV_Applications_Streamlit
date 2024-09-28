@@ -1,36 +1,42 @@
-# from time import time
+from time import time
 
-# import numpy as np
-# import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.pyplot as plt
+import os
 
-# from sklearn.ensemble import RandomForestClassifier
-# from sklearn.model_selection import train_test_split
-# from sklearn.metrics import roc_auc_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_auc_score
 
-# from skimage.data import lfw_subset
-# from skimage.transform import integral_image
-# from skimage.feature import haar_like_feature
-# from skimage.feature import haar_like_feature_coord
-# from skimage.feature import draw_haar_like_feature
+from skimage.data import lfw_subset
+from skimage.transform import integral_image
+from skimage.feature import haar_like_feature
+from skimage.feature import haar_like_feature_coord
+from skimage.feature import draw_haar_like_feature
 
-# # Trích xuất đặc trưng ảnh
-# def extract_feature_image(img, feature_type, feature_coord=None):
-#     """Extract the haar feature for the current image"""
-#     ii = integral_image(img)
-#     return haar_like_feature(
-#         ii,
-#         0,
-#         0,
-#         ii.shape[0],
-#         ii.shape[1],
-#         feature_type=feature_type,
-#         feature_coord=feature_coord,
-#     )
+# Trích xuất đặc trưng ảnh
+def extract_feature_image(img, feature_type, feature_coord=None):
+    """Extract the haar feature for the current image"""
+    ii = integral_image(img)
+    return haar_like_feature(
+        ii,
+        0,
+        0,
+        ii.shape[0],
+        ii.shape[1],
+        feature_type=feature_type,
+        feature_coord=feature_coord,
+    )
     
-# # Tập dataset 
-# images = lfw_subset()
-# # To speed up the example, extract the two types of features only
-# # Sử dụng 5 feature
+# Tập dataset 
+face = []
+non_face = []
+
+# dir_face = os.listdir('./images/faces_24x24/')
+# print(dir_face)
+
+# To speed up the example, extract the two types of features only
+# Sử dụng 5 feature
 # feature_types = ['type-2-x', 'type-2-y', 'type-3-x', 'type-3-y', 'type-4']
 
 # # Compute the result
@@ -51,11 +57,10 @@
 
 
 # Importing OpenCV package 
-import cv2 
-import matplotlib.pyplot as plt
-import streamlit as st
+# import cv2 
+# import matplotlib.pyplot as plt
+# import streamlit as st
 
-# Reading the image 
 # img = cv2.imread('D:\\OpenCV\\Grabcut\\Grabcut_Streamlit\\images\\images.png') 
 # # Converting image to grayscale 
 # gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
