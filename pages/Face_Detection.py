@@ -128,7 +128,7 @@ if image_upload is not None:
         # for (x, y, w, h) in faces_rect: 
         #     cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2) 
 
-        # st.image(img)
+        st.image(img)
         if len(faces_rect) > 0:
             st.markdown(' <span style = "color:red; font-size:22px;"> Đây là hình ảnh có chứa khuôn mặt</span>', unsafe_allow_html=True)
         else:
