@@ -114,7 +114,7 @@ if image_upload is not None:
         # if os.path.exists('.\\images\\haarcascade_frontalface_default.xml'):
         #     print(1)
         # else:
-            # print(0)
+        #     print(0)
 
         # Applying the face detection method on the grayscale image 
         face_rect = 0
@@ -124,10 +124,15 @@ if image_upload is not None:
         # print(len(faces_rect))
 
         # Iterating through rectangles of detected faces 
-        print(face_rect)
-        for (x, y, w, h) in faces_rect: 
-            cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2) 
+        # print(face_rect)
+        # for (x, y, w, h) in faces_rect: 
+        #     cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2) 
 
-        st.image(img)
+        # st.image(img)
+        if len(face_rect) > 0:
+            st.markdown(' <span style = "color:red; font-size:22px;"> Đây là hình ảnh có chứa khuôn mặt</span>', unsafe_allow_html=True)
+        else:
+            st.markdown(' <span style = "color:red; font-size:22px;"> Đây là hình ảnh không chứa khuôn mặt</span>', unsafe_allow_html=True)
+            
 
 
