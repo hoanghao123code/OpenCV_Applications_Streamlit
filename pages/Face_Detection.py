@@ -117,7 +117,7 @@ if image_upload is not None:
         #     print(0)
 
         # Applying the face detection method on the grayscale image 
-        face_rect = 0
+        # face_rect = 0
         # if gray_img is not None:
         faces_rect = haar_cascade.detectMultiScale(gray_img, 1.1, 9) 
 
@@ -129,7 +129,7 @@ if image_upload is not None:
         #     cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2) 
 
         # st.image(img)
-        if len(face_rect) > 0:
+        if len(faces_rect) > 0:
             st.markdown(' <span style = "color:red; font-size:22px;"> Đây là hình ảnh có chứa khuôn mặt</span>', unsafe_allow_html=True)
         else:
             st.markdown(' <span style = "color:red; font-size:22px;"> Đây là hình ảnh không chứa khuôn mặt</span>', unsafe_allow_html=True)
