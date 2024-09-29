@@ -126,7 +126,7 @@ if image_upload is not None:
             features.append([x, y, w, h])
         predictions = Knn.predict(features)
         print(type(predictions))
-        st.image(img)
+        st.image(img, channels="RGB")
         if predictions > 0.5:
             st.markdown(' <span style = "color:red; font-size:22px;"> Đây là hình ảnh có chứa khuôn mặt</span>', unsafe_allow_html=True)
         else:
