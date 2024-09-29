@@ -109,25 +109,25 @@ if image_upload is not None:
         gray_img = cv.cvtColor(img, cv.COLOR_BGR2GRAY) 
 
         # Loading the required haar-cascade xml classifier file 
-        # haar_cascade = cv.CascadeClassifier('./images/haarcascade_frontalface_default.xml') 
+        haar_cascade = cv.CascadeClassifier('./images/haarcascade_frontalface_default.xml') 
 
-        if os.path.exists('.\\images\\haarcascade_frontalface_default.xml'):
-            print(1)
-        else:
-            print(0)
+        # if os.path.exists('.\\images\\haarcascade_frontalface_default.xml'):
+        #     print(1)
+        # else:
+            # print(0)
 
         # Applying the face detection method on the grayscale image 
-        # face_rect = 0
-        # # if gray_img is not None:
-        # faces_rect = haar_cascade.detectMultiScale(gray_img, 1.1, 9) 
+        face_rect = 0
+        # if gray_img is not None:
+        faces_rect = haar_cascade.detectMultiScale(gray_img, 1.1, 9) 
 
-        # # print(len(faces_rect))
+        # print(len(faces_rect))
 
-        # # Iterating through rectangles of detected faces 
-        # print(face_rect)
-        # for (x, y, w, h) in faces_rect: 
-        #     cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2) 
+        # Iterating through rectangles of detected faces 
+        print(face_rect)
+        for (x, y, w, h) in faces_rect: 
+            cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2) 
 
-        # st.image(img)
+        st.image(img)
 
 
