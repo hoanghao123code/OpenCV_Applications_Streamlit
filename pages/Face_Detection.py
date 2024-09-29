@@ -74,32 +74,33 @@ face_dataset = np.array(face_dataset)
 
 # To speed up the example, extract the two types of features only
 # Sử dụng 5 feature
-feature_types = ['type-2-x', 'type-2-y', 'type-3-x', 'type-3-y', 'type-4']
+# feature_types = ['type-2-x', 'type-2-y', 'type-3-x', 'type-3-y', 'type-4']
 
-# Compute the result
-t_start = time()
-X = [extract_feature_image(image, feature_types) for image in face_dataset]
+# # Compute the result
+# t_start = time()
+# X = [extract_feature_image(image, feature_types) for image in face_dataset]
 
-# Với mỗi x trong X chứa khoảng 190k feature type (bộ lọc)
-X = np.stack(X)
-time_full_feature_comp = time() - t_start
+# # Với mỗi x trong X chứa khoảng 190k feature type (bộ lọc)
+# X = np.stack(X)
+# time_full_feature_comp = time() - t_start
 
-print(time_full_feature_comp)
-# Label images (400 faces and 400 non-faces)
-y = labels
-# Chia train, test
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, train_size=130, random_state=0, stratify=y
-)
+# print(time_full_feature_comp)
+# # Label images (400 faces and 400 non-faces)
+# y = labels
+# # Chia train, test
+# X_train, X_test, y_train, y_test = train_test_split(
+#     X, y, train_size=130, random_state=0, stratify=y
+# )
 
-Knn = KNeighborsClassifier(n_neighbors=5)
+# Knn = KNeighborsClassifier(n_neighbors=5)
 
-Knn.fit(X_train, y_train)
+# Knn.fit(X_train, y_train)
 
 
 # Importing OpenCV package 
 # import cv2 
 
+st.markdown("#### Chọn ảnh bạn cần phát hiện khuôn mặt")
 image_upload = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
  
@@ -124,10 +125,10 @@ if image_upload is not None:
         features = []
         for (x, y, w, h) in faces_rect:
             features.append([x, y, w, h])
-        predictions = Knn.predict(features)
-        print(type(predictions))
+        # predictions = Knn.predict(features)
+        # print(type(predictions))
         st.image(img, channels="RGB")
-        if predictions > 0.5:
+        if len(faces_rect) > 0:
             st.markdown(' <span style = "color:red; font-size:22px;"> Đây là hình ảnh có chứa khuôn mặt</span>', unsafe_allow_html=True)
         else:
             st.markdown(' <span style = "color:red; font-size:22px;"> Đây là hình ảnh không chứa khuôn mặt</span>', unsafe_allow_html=True)
