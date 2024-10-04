@@ -26,7 +26,7 @@ from skimage.feature import haar_like_feature
 from skimage.feature import haar_like_feature_coord
 from skimage.feature import draw_haar_like_feature
 
-cascade_file = 'D:\\OpenCV\\Grabcut\\Grabcut_Streamlit\\images\\Face_detect\\cascade.xml'
+cascade_file = './images/Face_detect/cascade.xml'
 
 tree = ET.parse(cascade_file)
 
