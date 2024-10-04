@@ -40,8 +40,9 @@ def run():
         max_size = 350
         h = image.height
         w = image.width
-        if max(h, w) > max_size:
-            image.thumbnail((max_size, max_size))
+        # if max(h, w) > max_size:
+        #     image = cv.resize(img, (max_size, max_size))
+        #     image = Image.fromarray(image)
         c1, c2 = st.columns(2)
         with c1:
             st.markdown('   <p style="text-indent: 100px;"> <span style = "color:red; font-size:22px;"> Ảnh gốc</span>', unsafe_allow_html=True)
@@ -50,8 +51,8 @@ def run():
                 stroke_width=stroke_width,
                 background_image=image,
                 update_streamlit=realtime_update,
-                height = image.height,
-                width = image.width,
+                height = image.width,
+                width = image.height,
                 drawing_mode=drawing_mode,
                 key="canvas",
             )
@@ -78,25 +79,6 @@ def run():
                 rect = (min_x, min_y, max_x, max_y)
                 list_rect.append(rect)
                 
-                # Xử lí foreground
-                
-                if obj['type'] == 'path':
-                   path_data = obj['path']
-                   print(type(path_data))
-                #    for x, y in path_data:
-                #        x = int(x)
-                #        y = int(y)
-                #        print(x, y)
-                #        if 0 <= x < image.height and 0 <= y < image.width:
-                #            masks[y, x] = 1
-                if obj['type'] == 'line':
-                    path_data = obj['line']
-                    # for x, y in path_data:
-                    #     x = int(x)
-                    #     y = int(y)
-                    #     if 0 <= x < image.height and 0 <= y < image.width:
-                    #         masks[y, x] = 0
-                # mask, back_ground, foreground
             rect = 0
             if len(list_rect) > 0:
                 rect = list_rect[0]

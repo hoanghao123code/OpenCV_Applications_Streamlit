@@ -336,7 +336,7 @@ def image_with_other_thesh(i, kernels, thresh, num_labels):
     cot5.image(lst_pred[3], caption="Mask với Kernel = 7")
 
 def Mask_of_Train(kernels, num_labels):
-    st.markdown(f"#### 2.1 Minh họa Mask của tập Train theo từng tham số khác nhau")
+    st.markdown(f"#### 3.1 Minh họa Mask của tập Train theo từng tham số khác nhau")
     thresh = st.slider("Chọn ngưỡng Thresh: ", 0.0, 0.4, 0.0)
     image_with_other_thesh(0, kernels, thresh, num_labels)
     image_with_other_thesh(1, kernels, thresh, num_labels)
@@ -344,13 +344,13 @@ def Mask_of_Train(kernels, num_labels):
 
 def Result_of_Test(best_kernel, best_thresh):
     watershed_res, ground_truth, ret, dice = Apply_best_Para(best_kernel, best_thresh, 2, 4)
-    st.markdown(f"#### 2.2 Kết quả khi áp dụng các chỉ số vừa tìm được vào tập Test")
+    st.markdown(f"#### 3.2 Kết quả khi áp dụng các chỉ số vừa tìm được vào tập Test")
     cc1, cc2 = st.columns(2)
     #Plot Test1
     cc1.image(ground_truth[0])
     cc1.markdown(f'   <p style="text-indent: 40px;"> <span style = "color:red; font-size:22px;"> Ground truth {list_image[2]}  </span>', unsafe_allow_html=True)
     cc2.image(watershed_res[0])
-    cc2.markdown(f'   <p style="text-indent: 90px;"> <span style = "color:red; font-size:22px;"> IoU = {ret[1]:.2f}, Dice = {dice[1]:.2f} </span>', unsafe_allow_html=True)
+    cc2.markdown(f'   <p style="text-indent: 90px;"> <span style = "color:red; font-size:22px;"> IoU = {ret[0]:.2f}, Dice = {dice[0]:.2f} </span>', unsafe_allow_html=True)
     
     #Plot Test2t
     cc1.image(ground_truth[1])
@@ -428,18 +428,19 @@ def calc():
     Mask_of_Train(kernels, num_labels)
     Result_of_Test(best_kernel, best_thresh)
     
-
-# def run_progress(duration):
-#     progress_bar = st.progress(0)
-#     for i in range(100):
-#         time.sleep(duration / 100)
-#         progress_bar.progress(i + 1)
-
-# def process():
-#     calc_thread = threading.Thread(target=calc)
-#     calc_thread.start()
-#     run_progress(24)
-#     calc_thread.join()
+def Text_PineLine():
+    st.markdown("##### **Trong đó:**")
+    st.markdown("- **(1)**: Chuyển từ ảnh **BGR** sang ảnh **Blurred**")
+    st.markdown("- **(2)**: Chuyển từ ảnh **Blurred** sang ảnh **Gray**")
+    st.markdown("- **(3)**: Sử dụng thuật toán **Inverse Binary Thresholding** và **Otsu's Binarization** để chuyển thành ảnh **Binary**")
+    st.markdown("- **(4)**: Dựa vào ảnh **Binary** để xác định **Distance transform**")
+    st.markdown("- **(5)**: Dựa vào ảnh **Binary** để xác định **Sure background**")
+    st.markdown("- **(6)**: Dựa vào **Distance transform** để xác định **Sure foreground**")
+    st.markdown("- **(7), (8)**: Dựa vào **Sure foreground** và **Sure background** để xác định vùng **Unknown**")
+    st.markdown("- **(9)**: Kết quả sau khi áp dụng thuật toán **Watershed segmentation**")
+    
+    
+    
     
 def run():
     st.markdown("### 1. Tập Train và Test")
@@ -447,7 +448,12 @@ def run():
     img_training(0, 1)
     st.markdown("#### 1.2 Tập Test")
     img_training(2, 3)
-    st.markdown("### 2. Xác định các tham số tối ưu")
+    
+    st.markdown("### 2. Quá trình phân đoạn kí tự bằng thuật toán Watershed Segmentation")
+    image_pipe_line = cv.imread('D:\OpenCV\Grabcut\Grabcut_Streamlit\images\pipeline_watershed.PNG')
+    st.image(image_pipe_line, channels='BGR')
+    Text_PineLine()
+    st.markdown("### 3. Xác định các tham số tối ưu")
     st.markdown("##### Các tham số được sử dụng")
     st.write("- Kernel = [(3, 3), (5, 5), (7, 7)]" )
     st.write("- Threshold = [0.00, 0.02, ..., 0.4]")
