@@ -11,3 +11,4 @@ matplotlib
 scikit-learn
 scikit-image
 google-cloud-firestore
+firebase_admin
