@@ -10,3 +10,4 @@ svgwrite
 matplotlib
 scikit-learn
 scikit-image
+google-cloud-firestore
