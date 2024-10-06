@@ -297,7 +297,7 @@ def Apply_best_Para(best_kernel, best_thresh, id_1, id_2):
         dice.append(Dice_coefficient(img_pred, img_ground))
     return watershed_res, ground_truth, ret, dice
 
-def image_with_other_thesh(i, kernels, thresh, num_labels):
+def image_with_other_Kernel(i, kernels, thresh, num_labels):
     lst_pred = []
     img_gt = cv.imread(path_gt[i], cv.IMREAD_GRAYSCALE)
     mask_gt = img_gt.copy()
@@ -335,11 +335,12 @@ def image_with_other_thesh(i, kernels, thresh, num_labels):
     cot4.image(lst_pred[2], caption="Mask với Kernel = 5")
     cot5.image(lst_pred[3], caption="Mask với Kernel = 7")
 
+
 def Mask_of_Train(kernels, num_labels):
     st.markdown(f"#### 3.1 Minh họa Mask của tập Train theo từng tham số khác nhau")
     thresh = st.slider("Chọn ngưỡng Thresh: ", 0.0, 0.4, 0.0)
-    image_with_other_thesh(0, kernels, thresh, num_labels)
-    image_with_other_thesh(1, kernels, thresh, num_labels)
+    image_with_other_Kernel(0, kernels, thresh, num_labels)
+    image_with_other_Kernel(1, kernels, thresh, num_labels)
     
 
 def Result_of_Test(best_kernel, best_thresh):
@@ -357,7 +358,76 @@ def Result_of_Test(best_kernel, best_thresh):
     cc1.markdown(f'   <p style="text-indent: 40px;"> <span style = "color:red; font-size:22px;"> Ground truth {list_image[3]} </span>', unsafe_allow_html=True)
     cc2.image(watershed_res[1])
     cc2.markdown(f'   <p style="text-indent: 90px;"> <span style = "color:red; font-size:22px;"> IoU = {ret[1]:.2f}, Dice = {dice[1]:.2f} </span>', unsafe_allow_html=True)
+
+def Pre_train():
+    # Các tham số
+    kernels = [(3, 3), (5, 5), (7, 7)]
+    lst_thresh = np.arange(0.0, 0.4, 0.02)
+    lst_IoU_1 = []
+    lst_IoU_2 = []
     
+    lst_dice_1 = []
+    lst_dice_2 = []
+    ans = []
+    
+    lst_ground = []
+    lst_pred = []
+    
+    #Thử với các tham số
+    for kernel in kernels:
+        for ratio in lst_thresh:
+            for i in range(2):
+                # Ground truth
+                img_gt = cv.imread(path_gt[i], cv.IMREAD_GRAYSCALE)
+                mast_gt = 0
+                if img_gt is not None:
+                    mask_gt = img_gt.copy()
+                img_gt[mask_gt == 85] = 255
+                img_gt[mask_gt != 85] = 0
+                
+                # Marker
+                markers = marker(i, kernel, ratio)
+                num_labels = np.unique(markers)
+                img_bg = cv.imread(path[i], cv.IMREAD_GRAYSCALE)
+                img_bg[img_bg != 0] = 0
+                
+                # Tô màu cho từng kí tự của ảnh
+                for labels in num_labels:
+                    if labels == -1:    
+                        continue
+                    id = np.where(markers == labels)
+                    x_min = min(id[0])
+                    x_max = max(id[0])
+                    
+                    y_min = min(id[1])
+                    y_max = max(id[1])
+                    
+                    height = (x_max - x_min) / img_bg.shape[0]
+                    width = (y_max - y_min) / img_bg.shape[1]
+                    if height >= 0.3 and height <= 0.6 and width >= 0.0 and width <= 0.3:
+                        img_bg[markers == labels] = 255
+                ans.append(img_bg)
+                img_pred = 0
+                img_ground = 0
+                if img_bg is not None:
+                    img_pred = img_bg.copy()
+                if img_gt is not None:
+                    img_ground = img_gt.copy()
+                img_ground[img_ground == 255] = 1
+                img_pred[img_pred == 255] = 1
+                if i == 0:
+                    lst_IoU_1.append(IoU(img_pred, img_ground))
+                    lst_dice_1.append(Dice_coefficient(img_pred, img_ground))
+                else:
+                    lst_IoU_2.append(IoU(img_pred, img_ground))
+                    lst_dice_2.append(Dice_coefficient(img_pred, img_ground))
+                    
+    lst_IoU_1 = np.array(lst_IoU_1)
+    lst_IoU_2 = np.array(lst_IoU_2)
+    lst_dice_1 = np.array(lst_dice_1)
+    lst_dice_2 = np.array(lst_dice_2)
+    return lst_IoU_1, lst_IoU_2, lst_dice_1, lst_dice_2
+
 def calc():   
     # Các tham số
     kernels = [(3, 3), (5, 5), (7, 7)]
@@ -422,6 +492,8 @@ def calc():
     
     Plot_IoU(lst_IoU_1, lst_IoU_2, lst_thresh)
     Plot_Dice(lst_dice_1, lst_dice_2, lst_thresh)
+    st.markdown("#### **Trong đó:**")
+    st.markdown(f'<span style = "color:red; font-size:18px;"> - Threshold : Tỉ lệ % của các điểm Unknown được chọn là Sure foreground </span>', unsafe_allow_html=True)
     # Tìm tham số tốt nhất
     
     best_kernel, best_thresh = best_para(lst_IoU_1, lst_IoU_2, lst_dice_1, lst_dice_2, lst_thresh)
@@ -439,8 +511,10 @@ def Text_PineLine():
     st.markdown("- **(7), (8)**: Dựa vào **Sure foreground** và **Sure background** để xác định vùng **Unknown**")
     st.markdown("- **(9)**: Kết quả sau khi áp dụng thuật toán **Watershed segmentation**")
     
-    
-    
+def Example_threshold():
+    st.markdown("#### * Ví dụ minh họa kết quả chọn Threshold")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.image(list_images[0], caption="Ảnh gốc")
     
 def run():
     st.markdown("### 1. Tập Train và Test")
