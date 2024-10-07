@@ -15,8 +15,6 @@ options = ['Hoàng Hào', 'Ngô Văn Hải', 'Trương Đoàn', 'Nguyễn Phư�
 select_options = st.selectbox("Chọn tên người bạn muốn xem thông tin", options)
 
 
-
-
 bucket = storage.Client.from_service_account_info(st.secrets).get_bucket('face-detection-2024.appspot.com')
 doc_ref = 0
 blob_1 = 0

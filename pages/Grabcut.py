@@ -24,9 +24,6 @@ def run():
         drawing_mode = st.sidebar.selectbox("Drawing tool:", ("rect")
         )
         stroke_width = st.sidebar.slider("Stroke width: ", 1, 25, 3)
-        # if drawing_mode == 'point':
-        #     point_display_radius = st.sidebar.slider("Point display radius: ", 1, 25, 3)
-        # stroke_color = st.sidebar.color_picker("Stroke color hex: ")
         realtime_update = st.sidebar.checkbox("Update in realtime", True)
         
         if not os.path.exists('images'):
@@ -36,46 +33,48 @@ def run():
         
     
         # Tạo thành phần canvas
-        img = cv.imread('images/' + image_upload.name)
-        max_size = 350
-        h = image.height
-        w = image.width
-        # if max(h, w) > max_size:
-        #     image = cv.resize(img, (max_size, max_size))
-        #     image = Image.fromarray(image)
-        c1, c2 = st.columns(2)
+        img = Image.open('images/' + image_upload.name)
+        max_size = 475
+        ww, hh = img.size
+        w = min(ww, max_size)
+        h = w * hh // ww
+        c1, c2 = st.columns(2, gap='large')
+        print(img.width, img.height, w, h)
         with c1:
             st.markdown('   <p style="text-indent: 100px;"> <span style = "color:red; font-size:22px;"> Ảnh gốc</span>', unsafe_allow_html=True)
             canvas_result = st_canvas(
                 fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
                 stroke_width=stroke_width,
-                background_image=image,
-                update_streamlit=realtime_update,
-                height = image.width,
-                width = image.height,
+                background_image=img,
+                # update_streamlit=realtime_update,
+                width = w,
+                height = h,
                 drawing_mode=drawing_mode,
                 key="canvas",
             )
             
         # canvas_result.json_data chứa thông tin các hình vẽ trên canvas
         image_ul = np.array(Image.open(image_upload))
+        
+        ori_image = np.array(img)
+        ori_image = cv.cvtColor(ori_image, cv.COLOR_RGBA2BGR)
         masks = np.zeros(image_ul.shape[:2], np.uint8)
+    
+        scale = ori_image.shape[1] / w
         if canvas_result is not None and canvas_result.json_data is not None:
             list_rect = []
             for obj in canvas_result.json_data["objects"]:
                 # Tọa độ x, y trái dưới
-                # print(obj['type'])
-                # rect, path, line
-                x = obj["left"]
-                y = obj["top"]
+                x = obj["left"] * scale
+                y = obj["top"] * scale
                 
                 # Chiều dài, chiều rộng
-                width = obj["width"]
-                height = obj["height"]
-                min_x = x 
-                min_y = y 
-                max_x = x + width
-                max_y = y + height
+                width = obj["width"] * scale
+                height = obj["height"] * scale
+                min_x = int(x)
+                min_y = int(y) 
+                max_x = int(x + width)
+                max_y = int(y + height)
                 rect = (min_x, min_y, max_x, max_y)
                 list_rect.append(rect)
                 
@@ -88,7 +87,7 @@ def run():
                 
                 # Áp dụng grapCut
                 
-                cv.grabCut(img, masks, rect, bgd_model, fgd_model, 1, cv.GC_INIT_WITH_RECT)
+                cv.grabCut(ori_image, masks, rect, bgd_model, fgd_model, 1, cv.GC_INIT_WITH_RECT)
                 
                 # Sửa đổi mask để các pixel được gán nhãn là foreground là 1, còn lại là 0 
                 mask2 = np.where((masks == 2) | (masks == 0), 0, 1).astype('uint8')
@@ -101,9 +100,8 @@ def run():
                 if st.button("Submit"):
                     with c2:
                         c2.markdown(' <p style="text-indent: 60px;"> <span style = "color:red; font-size:22px;">    Ảnh sau khi xử lí</span>', unsafe_allow_html=True)
-                        result = cv.resize(grabcut_result, (image.width, image.height))
                         if 'processed_image' not in st.session_state:
-                            st.session_state.processed_image = result
+                            st.session_state.processed_image = grabcut_result
                         st.image(st.session_state.processed_image)
                         result_image = Image.fromarray(st.session_state.processed_image)
                         buf = BytesIO()
