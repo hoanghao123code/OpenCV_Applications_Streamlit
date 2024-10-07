@@ -66,7 +66,7 @@ load_image()
 def marker(idx_image, kernels, ratio_thresh):
    
     img_bgr = list_images[idx_image]
-    # img_blur = cv.medianBlur(src = img_bgr, ksize = 3)
+    img_blur = cv.medianBlur(src = img_bgr, ksize = 3)
     img_gray = cv.cvtColor(img_bgr, cv.COLOR_BGR2GRAY)
     
     ret, img_thresh = cv.threshold(img_gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)
@@ -502,14 +502,17 @@ def calc():
     
 def Text_PineLine():
     st.markdown("##### **Trong đó:**")
-    st.markdown("- **(1)**: Chuyển từ ảnh **BGR** sang ảnh **Blurred**")
+    st.markdown("- **(1)**: Làm mờ ảnh với thuật toán **Median Blur**")
     st.markdown("- **(2)**: Chuyển từ ảnh **Blurred** sang ảnh **Gray**")
     st.markdown("- **(3)**: Sử dụng thuật toán **Inverse Binary Thresholding** và **Otsu's Binarization** để chuyển thành ảnh **Binary**")
     st.markdown("- **(4)**: Dựa vào ảnh **Binary** để xác định **Distance transform**")
     st.markdown("- **(5)**: Dựa vào ảnh **Binary** để xác định **Sure background**")
-    st.markdown("- **(6)**: Dựa vào **Distance transform** để xác định **Sure foreground**")
+    st.markdown("- **(6)**: Dựa vào **Distance transform** để xác định **Sure foreground** " 
+               + "(**Sure foreground** được xác định bằng cách giữ lại những vùng có giá trị lớn hơn ngưỡng **(Threshsold)** trong ảnh sau khi áp dụng **Distance transform**)")
     st.markdown("- **(7), (8)**: Dựa vào **Sure foreground** và **Sure background** để xác định vùng **Unknown**")
-    st.markdown("- **(9)**: Kết quả sau khi áp dụng thuật toán **Watershed segmentation**")
+    st.markdown("- **(9), (10)**: Dựa vào **Sure foreground** và **Unknown** để tạo ra **Marker**")
+    
+    st.markdown("- **(11)**: Xác định đối tượng phân đoạn dựa vào thuật toán **Watershed Transform**")
     
 def Example_threshold():
     st.markdown("#### * Ví dụ minh họa kết quả chọn Threshold")
@@ -524,7 +527,7 @@ def run():
     img_training(2, 3)
     
     st.markdown("### 2. Quá trình phân đoạn kí tự bằng thuật toán Watershed Segmentation")
-    image_pipe_line = cv.imread('./images/pipeline_watershed.png')
+    image_pipe_line = cv.imread('./images/pipeline_watershed.PNG')
     st.image(image_pipe_line, channels='BGR')
     Text_PineLine()
     st.markdown("### 3. Xác định các tham số tối ưu")
