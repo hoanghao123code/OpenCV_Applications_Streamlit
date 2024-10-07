@@ -23,7 +23,8 @@ def run():
     if image_upload is not None:
         drawing_mode = st.sidebar.selectbox("Drawing tool:", ("rect")
         )
-        stroke_width = st.sidebar.slider("Stroke width: ", 1, 25, 3)
+        
+        stroke_width = st.sidebar.slider("Stroke width: ", 1, 3, 3)
         realtime_update = st.sidebar.checkbox("Update in realtime", True)
         
         if not os.path.exists('images'):
@@ -35,13 +36,12 @@ def run():
         # Tạo thành phần canvas
         img = Image.open('images/' + image_upload.name)
         max_size = 475
-        ww, hh = img.size
-        w = min(ww, max_size)
-        h = w * hh // ww
-        c1, c2 = st.columns(2, gap='large')
-        print(img.width, img.height, w, h)
+        w = min(img.width, max_size)
+        h = w * img.height // img.width
+        # print(img.width, img.height, w, h)
+        c1, c2 = st.columns([3, 2])
         with c1:
-            st.markdown('   <p style="text-indent: 100px;"> <span style = "color:red; font-size:22px;"> Ảnh gốc</span>', unsafe_allow_html=True)
+            st.markdown('   <p style="text-indent: 190px;"> <span style = "color:red; font-size:22px;"> Ảnh gốc</span>', unsafe_allow_html=True)
             canvas_result = st_canvas(
                 fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
                 stroke_width=stroke_width,
