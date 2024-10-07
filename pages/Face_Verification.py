@@ -1,29 +1,21 @@
 import streamlit as st
 import firebase_admin
-from firebase_admin import credentials, storage
-from google.cloud import firestore
+import json, toml
+from firebase_admin import credentials
+from google.cloud import firestore, storage
 
 import cv2 as cv
 st.title("🎈Thông tin sinh viên CNTT")
 
 # Khởi tạo Firestore Client bằng credentials từ file JSON
-db = firestore.Client.from_service_account_json("./images/Private_Key/face-detection-2024-firebase-adminsdk-pevrv-476f6abf74.json")
-doc_ref = db.collection("1").document("1")
-doc = doc_ref.get()
-doc_data = doc.to_dict()
+db = firestore.Client.from_service_account_info(st.secrets)
 
 options = ['Hoàng Hào', 'Ngô Văn Hải', 'Trương Đoàn', 'Nguyễn Phước Bình', 'Nguyễn Vũ Hoàng	Chương', 'Trần Thị Thanh Huệ',
            'Lê Bá Nhật Minh', 'Lê Trần Khánh Tùng', 'Lê Minh Tú']
 select_options = st.selectbox("Chọn tên người bạn muốn xem thông tin", options)
 
-# Khởi tạo Firebase Admin với cùng một credentials
-if not firebase_admin._apps:
-    cred = credentials.Certificate('./images/Private_Key/face-detection-2024-firebase-adminsdk-pevrv-476f6abf74.json')
-    firebase_admin.initialize_app(cred, {
-        'storageBucket': 'face-detection-2024.appspot.com' 
-    })
-bucket = storage.bucket()
 
+bucket = storage.Client.from_service_account_info(st.secrets).get_bucket('face-detection-2024.appspot.com')
 doc_ref = 0
 blob_1 = 0
 blob_2 = 0
@@ -37,7 +29,7 @@ blob_2 = 0
 # except Exception as e:
 #     print(f"Có lỗi khi kết nối đến Firebase Storage: {e}")
 
-# Liệt kê các blob trong bucket
+# # Liệt kê các blob trong bucket
 # try:
 #     blob_1 = bucket.blob('Hao_Hoang_21T1020347_ChanDung.jpg')
 #     blob_1.make_public()
@@ -47,6 +39,9 @@ blob_2 = 0
 #     print(1)
 image_ChanDung = 0
 image_TheSV = 0
+
+
+
 if select_options == 'Hoàng Hào':
     doc_ref = db.collection("1").document("1")
     blob_1 = bucket.blob('Hao_Hoang_21T1020347_ChanDung.jpg')
