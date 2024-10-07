@@ -530,6 +530,7 @@ def run():
     image_pipe_line = cv.imread('./images/pipeline_watershed.PNG')
     st.image(image_pipe_line, channels='BGR')
     Text_PineLine()
+    
     st.markdown("### 3. Xác định các tham số tối ưu")
     st.markdown("##### Các tham số được sử dụng")
     st.write("- Kernel = [(3, 3), (5, 5), (7, 7)]" )
