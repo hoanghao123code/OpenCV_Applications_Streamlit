@@ -528,7 +528,8 @@ def run():
     
     st.markdown("### 2. Quá trình phân đoạn kí tự bằng thuật toán Watershed Segmentation")
     image_pipe_line = cv.imread('./images/pipeline_watershed.PNG')
-    st.image(image_pipe_line, channels='BGR')
+    if image_pipe_line is not None:
+        st.image(image_pipe_line, channels='BGR')
     Text_PineLine()
     
     st.markdown("### 3. Xác định các tham số tối ưu")
