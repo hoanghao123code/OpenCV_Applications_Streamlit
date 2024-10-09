@@ -58,13 +58,12 @@ def run():
         
         ori_image = np.array(img)
         ori_image = cv.cvtColor(ori_image, cv.COLOR_RGBA2BGR)
-        masks = np.zeros(image_ul.shape[:2], np.uint8)
     
         scale = ori_image.shape[1] / w
         if canvas_result is not None and canvas_result.json_data is not None:
             list_rect = []
             for obj in canvas_result.json_data["objects"]:
-                # Tọa độ x, y trái dưới
+                # Tọa độ x, y trái trên
                 x = obj["left"] * scale
                 y = obj["top"] * scale
                 
@@ -73,26 +72,26 @@ def run():
                 height = obj["height"] * scale
                 min_x = int(x)
                 min_y = int(y) 
-                max_x = int(x + width)
-                max_y = int(y + height)
-                rect = (min_x, min_y, max_x, max_y)
+                # max_x = int(x + width)
+                # max_y = int(y + height)
+                rect = (min_x, min_y, int(width), int(height))
                 list_rect.append(rect)
-                
             rect = 0
             if len(list_rect) > 0:
                 rect = list_rect[0]
-                # masks = np.zeros(image_ul.shape[:2], np.uint8)
+                masks = np.zeros(image_ul.shape[:2], np.uint8)
                 bgd_model = np.zeros((1, 65), np.float64)
                 fgd_model = np.zeros((1, 65), np.float64)
                 
                 # Áp dụng grapCut
                 
-                cv.grabCut(ori_image, masks, rect, bgd_model, fgd_model, 1, cv.GC_INIT_WITH_RECT)
+                cv.grabCut(ori_image, masks, rect, bgd_model, fgd_model, 5, cv.GC_INIT_WITH_RECT)
                 
                 # Sửa đổi mask để các pixel được gán nhãn là foreground là 1, còn lại là 0 
                 mask2 = np.where((masks == 2) | (masks == 0), 0, 1).astype('uint8')
                 
                 # Áp masks vào ảnh gốc
+                
                 grabcut_result = image_ul * mask2[:, :, np.newaxis]
                 
                 # In ảnh sau khi xử lí
