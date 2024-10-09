@@ -88,6 +88,7 @@ def run():
                 cv.grabCut(ori_image, masks, rect, bgd_model, fgd_model, 5, cv.GC_INIT_WITH_RECT)
                 
                 # Sửa đổi mask để các pixel được gán nhãn là foreground là 1, còn lại là 0 
+                
                 mask2 = np.where((masks == 2) | (masks == 0), 0, 1).astype('uint8')
                 
                 # Áp masks vào ảnh gốc
