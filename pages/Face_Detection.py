@@ -206,12 +206,15 @@ def Dataset_and_Training():
     st.image(image_IoU, channels="BGR", width=350)
     st.markdown("##### 3.2 Tiến hành đánh giá với các giá trị K (trong KNN) để tìm ra giá trị tốt nhất")
     st.write("**- K = [1, 2, 3, ... 50]**")
-    Plot_IoU()
+    image_IoU = cv.imread('./images/Face_Detection/image_IoU.PNG')
+    st.image(image_IoU, channels="BGR")
+    st.markdown("##### * Kết quả sau khi huấn luyện:")
+    st.write(" - Tham số K tốt nhất là **K = 20** với **Average IoU = 0.23**")
     st.markdown("##### 3.3 Kết quả khi áp dụng vào tập Test")
-    Result_of_Test()
-    
+    image_res = cv.imread('./images/Face_Detection/Result/Result_of_All.PNG')
+    st.image(image_res, caption="Kết quả sau khi áp dụng tham số K tốt nhất vào tập Test", channels="BGR")
 
-def Plot_IoU():
+# def Plot_IoU():
     # haar_cascade = cv.CascadeClassifier('D:\OpenCV\Grabcut\Grabcut_Streamlit\images\haarcascade_frontalface_default.xml')
     
     # lst_dir = os.listdir('D:\OpenCV\Grabcut\Grabcut_Streamlit\images\Face_Detection\Test')
@@ -262,12 +265,12 @@ def Plot_IoU():
     # best_IoU = max(lst_IoU)
     # id = np.where(lst_IoU == best_IoU)
     # print(best_IoU, K[id[0][0]])
-    image_IoU = cv.imread('./images/Face_Detection/image_IoU.PNG')
-    st.image(image_IoU, channels="BGR")
-    st.markdown("##### * Kết quả sau khi huấn luyện:")
-    st.write(" - Tham số K tốt nhất là **K = 20** với **Average IoU = 0.23**")
+    # image_IoU = cv.imread('./images/Face_Detection/image_IoU.PNG')
+    # st.image(image_IoU, channels="BGR")
+    # st.markdown("##### * Kết quả sau khi huấn luyện:")
+    # st.write(" - Tham số K tốt nhất là **K = 20** với **Average IoU = 0.23**")
     
-def Result_of_Test():
+# def Result_of_Test():
     # haar_cascade = cv.CascadeClassifier('D:\OpenCV\Grabcut\Grabcut_Streamlit\images\haarcascade_frontalface_default.xml')
     # lst_dir = os.listdir('D:\OpenCV\Grabcut\Grabcut_Streamlit\images\Face_Detection\Test')
     
@@ -291,9 +294,9 @@ def Result_of_Test():
     #     st.write(lst_dir[i])
     #     st.write(IoU_metric(image_pred, image_gt))
         # st.image(image, channels="BGR")
-    image_res = cv.imread('./images/Face_Detection/Result/Result_of_All.PNG')
-    if image_res is not None:
-        st.image(image_res, caption="Kết quả sau khi áp dụng tham số K tốt nhất vào tập Test", channels="BGR")
+    # image_res = cv.imread('./images/Face_Detection/Result/Result_of_All.PNG')
+    # if image_res is not None:
+    #     st.image(image_res, caption="Kết quả sau khi áp dụng tham số K tốt nhất vào tập Test", channels="BGR")
 
 def Load_Image_and_Process():
     st.markdown("### 4. Phát hiện khuôn mặt")
