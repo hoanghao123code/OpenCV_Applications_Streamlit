@@ -206,6 +206,7 @@ def Dataset_and_Training():
     st.image(image_IoU, channels="BGR", width=350)
     st.markdown("##### 3.2 Tiến hành đánh giá với các giá trị K (trong KNN) để tìm ra giá trị tốt nhất")
     st.write("**- K = [1, 2, 3, ... 50]**")
+    Plot_IoU()
     st.markdown("##### 3.3 Kết quả khi áp dụng vào tập Test")
     
 
@@ -312,7 +313,6 @@ def Load_Image_and_Process():
             st.image(img, channels="BGR")
 def App():
     Dataset_and_Training()
-    Plot_IoU()
     Result_of_Test()
     Load_Image_and_Process()
 App()
