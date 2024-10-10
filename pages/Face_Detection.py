@@ -294,6 +294,7 @@ def Result_of_Test():
     image_res = cv.imread('./images/Face_Detection/Result/Result_of_All.PNG')
     if image_res is not None:
         st.image(image_res, caption="Kết quả sau khi áp dụng tham số K tốt nhất vào tập Test", channels="BGR")
+
 def Load_Image_and_Process():
     st.markdown("### 4. Phát hiện khuôn mặt")
     
