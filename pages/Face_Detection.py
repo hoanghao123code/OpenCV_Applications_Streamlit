@@ -214,6 +214,7 @@ def Dataset_and_Training():
     image_res = cv.imread('./images/Face_Detection/Result/Result_of_All.PNG')
     st.image(image_res, caption="Kết quả sau khi áp dụng tham số K tốt nhất vào tập Test", channels="BGR")
 
+
 # def Plot_IoU():
     # haar_cascade = cv.CascadeClassifier('D:\OpenCV\Grabcut\Grabcut_Streamlit\images\haarcascade_frontalface_default.xml')
     
@@ -299,8 +300,7 @@ def Dataset_and_Training():
     #     st.image(image_res, caption="Kết quả sau khi áp dụng tham số K tốt nhất vào tập Test", channels="BGR")
 
 def Load_Image_and_Process():
-    st.markdown("### 4. Phát hiện khuôn mặt")
-    
+    st.markdown("### 4. Phát hiện khuôn mặt")    
     st.markdown("#### Chọn ảnh bạn cần phát hiện khuôn mặt")
     image_upload = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
     if image_upload is not None:
