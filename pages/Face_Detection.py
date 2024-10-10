@@ -208,6 +208,7 @@ def Dataset_and_Training():
     st.write("**- K = [1, 2, 3, ... 50]**")
     Plot_IoU()
     st.markdown("##### 3.3 Kết quả khi áp dụng vào tập Test")
+    Result_of_Test()
     
 
 def Plot_IoU():
@@ -313,7 +314,6 @@ def Load_Image_and_Process():
             st.image(img, channels="BGR")
 def App():
     Dataset_and_Training()
-    Result_of_Test()
     Load_Image_and_Process()
 App()
 
