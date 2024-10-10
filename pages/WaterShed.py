@@ -161,7 +161,7 @@ def Plot_IoU(IoU_1, IoU_2, thresh):
     ax.set_title('Biểu đồ IoU theo Threshold và Kernel của ảnh 1xemay278')  
     ax.legend()
 
-    fig2, ax2= plt.subplots()
+    fig2, ax2 = plt.subplots()
     ax2.plot(thresh, y1, label='Kernel = (3, 3)')
     ax2.plot(thresh, y2, label='Kernel = (5, 5)')
     ax2.plot(thresh, y3, label='Kernel = (7, 7)')
