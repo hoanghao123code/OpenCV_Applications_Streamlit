@@ -211,7 +211,7 @@ def Dataset_and_Training():
     st.markdown("##### * Kết quả sau khi huấn luyện:")
     st.write(" - Tham số K tốt nhất là **K = 20** với **Average IoU = 0.23**")
     
-    st.markdown("##### 3.3 Kết quả khi áp dụng vào tập Test")
+    # st.markdown("##### 3.3 Kết quả khi áp dụng vào tập Test")
     image_res = cv.imread('./images/Face_Detection/Result/Result_of_All.PNG')
     st.image(image_res, caption="Kết quả sau khi áp dụng tham số K tốt nhất vào tập Test", channels="BGR")
 
