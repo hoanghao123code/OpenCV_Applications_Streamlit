@@ -394,36 +394,37 @@ def YuNet_and_Sface():
 
     image1 = st.file_uploader("Tải ảnh chân dung", type=["png", "jpg", "jpeg"])
     image2 = st.file_uploader("Tải ảnh thẻ sv", type=["png", "jpg", "jpeg"])
-    img1 = cv.imread(image1.name)
-    img2 = cv.imread(image2.name)
+    if image1 is not None and image2 is not None:
+        img1 = cv.imread(image1.name)
+        img2 = cv.imread(image2.name)
     
     # img1 = cv.imread(args.target)
     # img2 = cv.imread(args.query)
 
     # Detect faces
-    detector.setInputSize([img1.shape[1], img1.shape[0]])
-    faces1 = detector.infer(img1)
-    assert faces1.shape[0] > 0, 'Cannot find a face in {}'.format(args.target)
-    detector.setInputSize([img2.shape[1], img2.shape[0]])
-    faces2 = detector.infer(img2)
-    assert faces2.shape[0] > 0, 'Cannot find a face in {}'.format(args.query)
+        detector.setInputSize([img1.shape[1], img1.shape[0]])
+        faces1 = detector.infer(img1)
+        assert faces1.shape[0] > 0, 'Cannot find a face in {}'.format(args.target)
+        detector.setInputSize([img2.shape[1], img2.shape[0]])
+        faces2 = detector.infer(img2)
+        assert faces2.shape[0] > 0, 'Cannot find a face in {}'.format(args.query)
 
-    # Match
-    scores = []
-    matches = []
-    for face in faces2:
-        result = recognizer.match(img1, faces1[0][:-1], img2, face[:-1])
-        scores.append(result[0])
-        matches.append(result[1])
+        # Match
+        scores = []
+        matches = []
+        for face in faces2:
+            result = recognizer.match(img1, faces1[0][:-1], img2, face[:-1])
+            scores.append(result[0])
+            matches.append(result[1])
 
-    # Draw results
-    image = visualize(img1, faces1, img2, faces2, matches, scores)
+        # Draw results
+        image = visualize(img1, faces1, img2, faces2, matches, scores)
 
-    # # Save results if save is true
-    # if args.save:
-    #     print('Resutls saved to result.jpg\n')
-    #     cv.imwrite('result.jpg', image)
-    st.image(image)
+        # # Save results if save is true
+        # if args.save:
+        #     print('Resutls saved to result.jpg\n')
+        #     cv.imwrite('result.jpg', image)
+        st.image(image)
     
 def App():
     st.markdown("#### 1. Thông tin sinh viên")
