@@ -429,13 +429,6 @@ def App():
     get_Info()
     CRUD()
     Table_of_Data()
-    # YuNet_and_Sface()
-    # Đường dẫn đến file ONNX
-    model_path = "D:\\OpenCVGrabcut\\Grabcut_Streamlit\\services\\face_verification\\face_recognition_sface_2021dec.onnx"
-
-    try:
-        net = cv.dnn.readNetFromONNX(model_path)
-        print("Model loaded successfully.")
-    except cv.error as e:
-        print("Error loading model:", e)
+    YuNet_and_Sface()
+    
 App()
