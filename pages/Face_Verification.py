@@ -16,7 +16,8 @@ import sys
 import os
 import argparse
 
-sys.path.append("D:\OpenCV\Grabcut\Grabcut_Streamlit\services") 
+
+sys.path.append("./services") 
 # from services.face_verification.yunet import YuNet
 # from services.face_verification.sface import SFace
 from face_verification.yunet import YuNet
