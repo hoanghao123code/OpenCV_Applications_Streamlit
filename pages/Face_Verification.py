@@ -3,7 +3,7 @@ import firebase_admin
 import json, toml
 from firebase_admin import credentials
 from google.cloud import firestore, storage
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 import cv2 as cv
@@ -395,8 +395,13 @@ def YuNet_and_Sface():
     image1 = st.file_uploader("Tải ảnh chân dung", type=["png", "jpg", "jpeg"])
     image2 = st.file_uploader("Tải ảnh thẻ sv", type=["png", "jpg", "jpeg"])
     if image1 is not None and image2 is not None:
-        img1 = cv.imread(image1.name)
-        img2 = cv.imread(image2.name)
+        img1 = Image.open(image1)
+        img1 = ImageOps.exif_transpose(img1)
+        img1 = cv.cvtColor(np.array(img1), cv.COLOR_RGB2BGR)
+        
+        img2 = Image.open(image2)
+        img2 = ImageOps.exif_transpose(img2)
+        img2 = cv.cvtColor(np.array(img2), cv.COLOR_RGB2BGR)
     
     # img1 = cv.imread(args.target)
     # img2 = cv.imread(args.query)
