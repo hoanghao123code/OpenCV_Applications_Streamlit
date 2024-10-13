@@ -264,21 +264,21 @@ def CRUD():
     if c2.button('Thêm'):
         st.session_state.add_clicked = True
     if st.session_state.add_clicked:
-        Input_name = col_name.text_input("Tên")
-        Input_Masv = col_Masv.text_input("Mã sinh viên")
+        Input_name_add = col_name.text_input("Tên")
+        Input_Masv_add = col_Masv.text_input("Mã sinh viên")
         
         AnhChanDung_upload = st.file_uploader("Tải ảnh chân dung", type=["png", "jpg", "jpeg"])
         TheSV_upload = st.file_uploader("Tải ảnh thẻ sv", type=["png", "jpg", "jpeg"])
-        if st.button('Xong'):
-            if Input_name == "" and Input_Masv == "":
+        if st.button('Xong '):
+            if Input_name_add == "" and Input_Masv_add == "":
                 st.markdown("##### Chú ý: Bạn phải nhập đầy đủ **Tên** và **Mã sinh viên**")
             else:
-                Add_Student(Ten=Input_name, Masv=Input_Masv, url_ChanDung="", url_TheSV="")
+                Add_Student(Ten=Input_name_add, Masv=Input_Masv_add, url_ChanDung="", url_TheSV="")
                 id = len(lst_TheSV) + 1
-                Name_1 = remove_accents(Input_name)
+                Name_1 = remove_accents(Input_name_add)
                 Name_1 = Name_1.replace(" ", "") + "AnhChanDung.jpg"
                 
-                Name_2 = remove_accents(Input_Masv)
+                Name_2 = remove_accents(Input_Masv_add)
                 Name_2 = Name_2.replace(" ", "") + "TheSV.jpg"
 
                 Add_Image(AnhChanDung_upload, Name_1, id, 1)
