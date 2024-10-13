@@ -53,7 +53,7 @@ def get_url_Image(path):
 #             public_url2 = read_Image(file_list[2])
 #             lst_TheSV.append(f"<img src='{public_url2}' width='100'>")
 #         # print(list(blobs.prefixes))
-# st.cache_data(ttl="2h")
+st.cache_data(ttl="2h")
 def get_Info():
     lst_Ten = []
     lst_Masv = []
@@ -104,7 +104,7 @@ def add_Image_url():
         file_list = [blob.name for blob in blobs]
         public_url1 = get_url_Image(file_list[1])
         doc_ref = db.collection('1').document(str(i + 1))
-        public_url2 = public_url1
+        public_url2 = ""
         if len(file_list) > 2:
             public_url2 = get_url_Image(file_list[2])
         # print(public_url1, public_url2)
@@ -378,7 +378,11 @@ def visualize(img1, faces1, img2, faces2, matches, scores, target_size=[512, 512
 
 def YuNet_and_Sface():
     st.markdown("#### 2. Ứng dụng xác thực khuôn mặt và thẻ sinh viên")
-    threshold = st.slider("Chọn ngưỡng Confident Threshold: ", 0.0, 1.0, 0.75)
+    threshold = st.slider("Chọn ngưỡng **Confident Threshold:** ", 0.0, 1.0, 0.75)
+    st.markdown("##### * Một số lưu ý:")
+    st.write(" - Để đảm bảo kết quả tốt nhất thì ảnh phải không bị mờ, nhiễu")
+    st.write(" - Ảnh không nhắm mắt, không được nghiêng quá nhiều (nên sử dụng những ảnh nhìn trực diện)")
+    st.write(" - Ứng dụng này có thể xác thực khuôn mặt có kích thước từ **10x10** đến **300x300** pixels")
     backend_id = backend_target_pairs[args.backend_target][0]
     target_id = backend_target_pairs[args.backend_target][1]
     # Instantiate SFace for face recognition
@@ -395,8 +399,8 @@ def YuNet_and_Sface():
                      backendId=backend_id,
                      targetId=target_id)
     c1, c2 = st.columns(2)
-    image1 = c1.file_uploader("Tải ảnh chân dung", type=["png", "jpg", "jpeg"])
-    image2 = c2.file_uploader("Tải ảnh thẻ sv", type=["png", "jpg", "jpeg"])
+    image1 = c1.file_uploader("Tải ảnh thẻ sinh viên", type=["png", "jpg", "jpeg"])
+    image2 = c2.file_uploader("Tải ảnh chân dung", type=["png", "jpg", "jpeg"])
     if image1 is not None and image2 is not None:
         img1 = Image.open(image1)
         img1 = ImageOps.exif_transpose(img1)
@@ -405,7 +409,11 @@ def YuNet_and_Sface():
         img2 = Image.open(image2)
         img2 = ImageOps.exif_transpose(img2)
         img2 = cv.cvtColor(np.array(img2), cv.COLOR_RGB2BGR)
-    
+        # scale ảnh chân dung
+        max_size = 250
+        w = min(img2.shape[1], max_size)
+        h = w * img2.shape[0] // img2.shape[1]
+        img2 = cv.resize(img2, (w, h))
     # Detect faces
         detector.setInputSize([img1.shape[1], img1.shape[0]])
         faces1 = detector.infer(img1)
@@ -416,9 +424,9 @@ def YuNet_and_Sface():
 
         # Match
         if len(faces1) == 0:
-            st.markdown("Không tìm thấy ảnh **Chân dung**")
-        if len(faces2) == 0:
             st.markdown("Không tìm thấy ảnh **Thẻ sv**")
+        if len(faces2) == 0:
+            st.markdown("Không tìm thấy ảnh **Chân dung**")
         if len(faces1) > 0 and len(faces2) > 0:
             scores = []
             matches = []
@@ -433,8 +441,11 @@ def YuNet_and_Sface():
                 st.image(image, channels="BGR")
     
 def Verification_with_Class():
-    st.markdown("#### 3. Ứng dụng xác thực khuôn mặt trong lớp học")
-    threshold = st.slider("Chọn ngưỡng Confident Threshold: ", 0.0, 1.0, 0.75)
+    st.markdown("#### 3. Ứng dụng nhận diện khuôn mặt trong lớp học")
+    thresh = st.slider("Chọn ngưỡng **Confident Threshold** ", 0.0, 1.0, 0.80)
+    st.markdown("##### * Một số lưu ý:")
+    st.write(" - Để đảm bảo kết quả tốt nhất thì ảnh phải không bị mờ, nhiễu")
+    st.write(" - Ứng dụng này có thể nhận diện khuôn mặt có kích thước từ **10x10** đến **300x300** pixels")
     backend_id = backend_target_pairs[args.backend_target][0]
     target_id = backend_target_pairs[args.backend_target][1]
     # Instantiate SFace for face recognition
@@ -445,52 +456,75 @@ def Verification_with_Class():
     # Instantiate YuNet for face detection
     detector = YuNet(modelPath='./services/face_verification/face_detection_yunet_2023mar.onnx',
                      inputSize=[320, 320],
-                     confThreshold=threshold,
+                     confThreshold=thresh,
                      nmsThreshold=0.3,
                      topK=5000,
                      backendId=backend_id,
                      targetId=target_id)
     c1, c2 = st.columns(2)
-    # image1 = c1.file_uploader("Tải ảnh chân dung", type=["png", "jpg", "jpeg"])
     dataset_image = []
     path_dataset = './images/Faces_dataset'
-    lst_image = os.listdir(path_dataset)
-    print(lst_image)
-    image2 = c2.file_uploader("Tải ảnh thẻ sv", type=["png", "jpg", "jpeg"])
-    # if image1 is not None and image2 is not None:
-    #     img1 = Image.open(image1)
-    #     img1 = ImageOps.exif_transpose(img1)
-    #     img1 = cv.cvtColor(np.array(img1), cv.COLOR_RGB2BGR)
+    lst_image_path = os.listdir(path_dataset)
+    lst_image = []
+    lst_dataset = []
+    for i in range(len(lst_image_path)):
+        img = cv.imread(path_dataset + "/" + lst_image_path[i])
+        max_size = 250
+        w = min(img.shape[1], max_size)
+        h = w * img.shape[0] // img.shape[1]
         
-    #     img2 = Image.open(image2)
-    #     img2 = ImageOps.exif_transpose(img2)
-    #     img2 = cv.cvtColor(np.array(img2), cv.COLOR_RGB2BGR)
+        img = cv.resize(img, (w, h))
+        lst_image.append(img)
+        detector.setInputSize([img.shape[1], img.shape[0]])
+        faces1 = detector.infer(img)
+        lst_dataset.append((faces1, i))
+    image = st.file_uploader("Tải ảnh lớp học", type=["png", "jpg", "jpeg"])
+    if image is None:
+        st.markdown("Vui lòng tải ảnh lên trước khi **Submit**")
+    if image is not None:
+        img = Image.open(image)
+        img = ImageOps.exif_transpose(img)
+        img = cv.cvtColor(np.array(img), cv.COLOR_RGB2BGR)
+        image_class = img.copy()
     
-    # # Detect faces
-    #     detector.setInputSize([img1.shape[1], img1.shape[0]])
-    #     faces1 = detector.infer(img1)
-    #     # assert faces1.shape[0] > 0, 'Cannot find a face in {}'.format(args.target)
-    #     detector.setInputSize([img2.shape[1], img2.shape[0]])
-    #     faces2 = detector.infer(img2)
-    #     # assert faces2.shape[0] > 0, 'Cannot find a face in {}'.format(args.query)
-
-    #     # Match
-    #     if len(faces1) == 0:
-    #         st.markdown("Không tìm thấy ảnh **Chân dung**")
-    #     if len(faces2) == 0:
-    #         st.markdown("Không tìm thấy ảnh **Thẻ sv**")
-    #     if len(faces1) > 0 and len(faces2) > 0:
-    #         scores = []
-    #         matches = []
-    #         for face in faces2:
-    #             result = recognizer.match(img1, faces1[0][:-1], img2, face[:-1])
-    #             scores.append(result[0])
-    #             matches.append(result[1])
-
-    #         # Draw results
-    #         image = visualize(img1, faces1, img2, faces2, matches, scores)
-    #         if st.button("Submit"):
-    #             st.image(image, channels="BGR")
+    # Detect faces
+        detector.setInputSize([img.shape[1], img.shape[0]])
+        faces = detector.infer(img)
+        if len(faces) == 0:
+            st.markdown("Không tìm thấy khuôn mặt trong ảnh này. Vui lòng tải lên ảnh khác để **nhận diện** tốt hơn")
+        else:
+            scores = []
+            matches = []
+            lst_id = []
+            for (faces1, id) in lst_dataset:
+                best_score = 0
+                best_id = -1
+                for face in faces:
+                    result = recognizer.match(lst_image[id], lst_dataset[id][0][:-1], img, face[:-1])
+                    score, match = result[0], result[1]
+                    if match == 1 and score > best_score:
+                        best_score = score
+                        best_id = id
+                if best_id != -1:    
+                    x, y, w, h = faces[best_id][:4]
+                    lst_id.append(best_id)
+                    x = int(x)
+                    y = int(y)
+                    w = int(w)
+                    h = int(h)
+                    image_class = cv.rectangle(image_class, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    name = os.path.splitext(lst_image_path[best_id])[0]
+                    image_class = cv.putText(image_class, name, (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+            if st.button("Submit "):
+                st.image(image_class, channels="BGR")
+                if len(lst_id) > 0:
+                    st.markdown("Danh sách các thành viên được nhận diện trong bức ảnh:")
+                    c = st.columns(len(lst_id))
+                    for i in range(len(lst_id)):
+                        name = os.path.splitext(lst_image_path[lst_id[i]])[0]
+                        c[i].image(lst_image[lst_id[i]], caption=name, channels="BGR")
+                else:
+                    st.markdown("Không nhận diện được thành viên nào trong bức ảnh")
 
 
 def App():
