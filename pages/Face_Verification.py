@@ -264,11 +264,11 @@ def CRUD():
     if c2.button('Thêm'):
         st.session_state.add_clicked = True
     if st.session_state.add_clicked:
-        Input_name_add = col_name.text_input("Tên")
-        Input_Masv_add = col_Masv.text_input("Mã sinh viên")
+        Input_name_add = col_name.text_input("Nhập tên")
+        Input_Masv_add = col_Masv.text_input("Nhập mã sv")
         
-        AnhChanDung_upload = st.file_uploader("Tải ảnh chân dung", type=["png", "jpg", "jpeg"])
-        TheSV_upload = st.file_uploader("Tải ảnh thẻ sv", type=["png", "jpg", "jpeg"])
+        AnhChanDung_upload = st.file_uploader("Tải ảnh chân dung của bạn", type=["png", "jpg", "jpeg"])
+        TheSV_upload = st.file_uploader("Tải ảnh thẻ sv của bạn", type=["png", "jpg", "jpeg"])
         if st.button('Xong '):
             if Input_name_add == "" and Input_Masv_add == "":
                 st.markdown("##### Chú ý: Bạn phải nhập đầy đủ **Tên** và **Mã sinh viên**")
@@ -515,7 +515,7 @@ def Verification_with_Class():
                     image_class = cv.rectangle(image_class, (x, y), (x + w, y + h), (0, 255, 0), 2)
                     name = os.path.splitext(lst_image_path[best_id])[0]
                     image_class = cv.putText(image_class, name, (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-            if st.button("Submit "):
+            if st.button("Tiến hành nhận diện"):
                 st.image(image_class, channels="BGR")
                 if len(lst_id) > 0:
                     st.markdown("Danh sách các thành viên được nhận diện trong bức ảnh:")
