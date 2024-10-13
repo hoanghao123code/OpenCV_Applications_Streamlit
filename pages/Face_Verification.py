@@ -492,6 +492,7 @@ def Verification_with_Class():
     #         if st.button("Submit"):
     #             st.image(image, channels="BGR")
 
+
 def App():
     st.markdown("#### 1. Thông tin sinh viên")
     get_Info()
