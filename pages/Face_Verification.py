@@ -605,6 +605,7 @@ def Verification_with_Class():
                     st.markdown("Không nhận diện được thành viên nào trong bức ảnh")
 
 
+
 def App():
     st.markdown("#### 1. Thông tin sinh viên")
     get_Info()
