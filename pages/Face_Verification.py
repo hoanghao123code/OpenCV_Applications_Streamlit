@@ -4,7 +4,7 @@ import json, toml
 from firebase_admin import credentials
 from google.cloud import firestore, storage
 from PIL import Image, ImageOps
-
+from google.cloud.firestore import FieldFilter as fil
 
 import cv2 as cv
 import pandas as pd
@@ -15,7 +15,8 @@ import tempfile
 import sys
 import os
 import argparse
-
+import time
+import random
 
 sys.path.append("./services") 
 # from services.face_verification.yunet import YuNet
@@ -61,12 +62,11 @@ def get_Info():
     lst_TheSV = []
     doc = db.collection('1').get()
     lent = len(doc)
-    for i in range(1, lent + 1, 1):
-        doc_ref = db.collection("1").document(str(i))
-        doc = doc_ref.get()
-        doc_data = doc.to_dict()
+    doc = db.collection("1").stream()
+    for i in doc:
+        doc_data = i.to_dict()
         Ten = doc_data.get('Ten')
-        Masv = doc_data.get('Ma sinh vien')
+        Masv = doc_data.get('Ma_sinh_vien')
         Nganh = doc_data.get('Nganh')
         url_ChanDung = doc_data.get('url_ChanDung')
         url_TheSV = doc_data.get('url_TheSV')
@@ -137,7 +137,7 @@ def disPlay_Info(id):
     doc = doc_ref.get()
     doc_data = doc.to_dict()
     Ten = doc_data.get('Ten')
-    Masv = doc_data.get('Ma sinh vien')
+    Masv = doc_data.get('Ma_sinh_vien')
     # Nganh = doc_data.get('Nganh')
     url_ChanDung = doc_data.get('url_ChanDung')
     url_TheSV = doc_data.get('url_TheSV')
@@ -168,7 +168,7 @@ def normalize_Name():
 def Add_Student(Ten = "", Masv = "", url_ChanDung = "", url_TheSV = ""):
     data = {
         'Ten' : Ten,
-        'Ma sinh vien' : Masv,
+        'Ma_sinh_vien' : Masv,
         'url_ChanDung' : url_ChanDung,
         'url_TheSV' : url_TheSV
     }
@@ -227,11 +227,41 @@ def CRUD():
     # Tìm kiếm
     if 'search_clicked' not in st.session_state:
         st.session_state.search_clicked = False
+        
+    if 'add_clicked' not in st.session_state:
+        st.session_state.add_clicked = False
+    
+    if 'update_clicked' not in st.session_state:
+        st.session_state.update_clicked = False
+        
+    if 'deleted_clicked' not in st.session_state:
+        st.session_state.deleted_clicked = False
+        
+        
     if c1.button('Tìm kiếm'):
         st.session_state.search_clicked = True
+        st.session_state.add_clicked = False
+        st.session_state.update_clicked = False
+        st.session_state.deleted_clicked = False
+        
+    if c2.button('Thêm'):
+        st.session_state.search_clicked = False
+        st.session_state.add_clicked = True
+        st.session_state.update_clicked = False
+        st.session_state.deleted_clicked = False
+    if c3.button("Sửa"):
+        st.session_state.add_clicked = False
+        st.session_state.search_clicked = False
+        st.session_state.update_clicked = True
+        st.session_state.deleted_clicked = False
+    
+    if c4.button("Xóa"):
+        st.session_state.add_clicked = False
+        st.session_state.search_clicked = False
+        st.session_state.update_clicked = False
+        st.session_state.deleted_clicked = True    
     
     if st.session_state.search_clicked:
-        
         Input_name = col_name.text_input("Tên")
         Input_Masv = col_Masv.text_input("Mã sinh viên")
         
@@ -242,7 +272,7 @@ def CRUD():
         lst_TheSV = normalize_TheSV(lst_TheSV)
         
         if st.button("Xong"):
-        
+            st.cache_data.clear()
             if Input_name != "":
                 for i in range(len(lst_name)):
                     if Input_name in lst_name[i]:
@@ -258,39 +288,80 @@ def CRUD():
             for i in lst_id:
                 disPlay_Info(i)
     
-    # Thêm
-    if 'add_clicked' not in st.session_state:
-        st.session_state.add_clicked = False
-    if c2.button('Thêm'):
-        st.session_state.add_clicked = True
+    # Thêm 
+    
     if st.session_state.add_clicked:
         Input_name_add = col_name.text_input("Nhập tên")
         Input_Masv_add = col_Masv.text_input("Nhập mã sv")
         
-        AnhChanDung_upload = st.file_uploader("Tải ảnh chân dung của bạn", type=["png", "jpg", "jpeg"])
-        TheSV_upload = st.file_uploader("Tải ảnh thẻ sv của bạn", type=["png", "jpg", "jpeg"])
+        col_1, col_2 = st.columns(2)
+        
+        AnhChanDung_upload = col_1.file_uploader("Tải ảnh chân dung của bạn", type=["png", "jpg", "jpeg"])
+        TheSV_upload = col_2.file_uploader("Tải ảnh thẻ sv của bạn", type=["png", "jpg", "jpeg"])
         if st.button('Xong '):
+            st.cache_data.clear()
             if Input_name_add == "" and Input_Masv_add == "":
                 st.markdown("##### Chú ý: Bạn phải nhập đầy đủ **Tên** và **Mã sinh viên**")
             else:
                 Add_Student(Ten=Input_name_add, Masv=Input_Masv_add, url_ChanDung="", url_TheSV="")
                 id = len(lst_TheSV) + 1
                 Name_1 = remove_accents(Input_name_add)
-                Name_1 = Name_1.replace(" ", "") + "AnhChanDung.jpg"
+                unique_id = str(int(time.time())) + str(random.randint(1000, 9999))
+                Name_1 = Name_1.replace(" ", "") + str(unique_id) + "AnhChanDung.jpg"
                 
                 Name_2 = remove_accents(Input_Masv_add)
-                Name_2 = Name_2.replace(" ", "") + "TheSV.jpg"
+                Name_2 = Name_2.replace(" ", "") + str(unique_id) + "TheSV.jpg"
 
                 Add_Image(AnhChanDung_upload, Name_1, id, 1)
                 Add_Image(TheSV_upload, Name_2, id, 2)
     
     # Sửa
-    # if 'update_clicked' not in st.session_state:
-    #     st.session_state.update_clicked = False
-    # if c2.button('Sửa'):
-    #     st.session_state.update_clicked = True
-    # if st.session_state.update_clicked:
-
+    if st.session_state.update_clicked:
+        selected_name = st.selectbox("Chọn sinh viên muốn chỉnh sửa thông tin", lst_Ten)
+        id = 0
+        for i in range(len(lst_Ten)):
+            if lst_Ten[i] == selected_name:
+                id = i
+                break
+        c1, c2 = st.columns(2)
+        text_1 = c1.text_input("Nhập tên cần sửa: ", selected_name)
+        text_2 = c2.text_input("Nhập mã sv cần sửa: ", lst_Masv[id])
+        
+        image_upload_1 = c1.file_uploader("Chọn ảnh chân dung cần thay thế", type=["png", "jpg", "jpeg"])
+        image_upload_2 = c2.file_uploader("Chọn ảnh thẻ sv cần thay thế" , type=["png", "jpg", "jpeg"])
+        
+        if st.button("Xong"):
+            st.cache_data.clear()
+            doc_ref = db.collection('1').document(str(id + 1))
+            doc_ref.update({
+                "Ten": text_1,
+                "Ma_sinh_vien": text_2
+            })
+            if image_upload_1 is not None:
+                Name_1 = remove_accents(text_1)
+                unique_id = str(int(time.time())) + str(random.randint(1000, 9999))
+                Name_1 = Name_1.replace(" ", "") + str(unique_id) + "AnhChanDung.jpg"
+                Add_Image(image_upload_1, Name_1, id + 1, 1)
+            if image_upload_2 is not None:
+                Name_2 = remove_accents(text_2)
+                unique_id = str(int(time.time())) + str(random.randint(1000, 9999))
+                Name_2 = Name_2.replace(" ", "") + str(unique_id) + "TheSV.jpg"
+                Add_Image(image_upload_2, Name_2, id + 1, 2)
+    # Xóa
+    if st.session_state.deleted_clicked:
+        selected_name = st.selectbox("Chọn sinh viên muốn xóa thông tin", lst_Ten)
+        if st.button("Xóa sinh viên"):
+            st.cache_data.clear()
+            doc = db.collection("1").stream()
+            for i in doc:
+                doc_data = i.to_dict()
+                Ten = doc_data.get('Ten')
+                # Masv = doc_data.get('Ma_sinh_vien')
+                if Ten == selected_name:
+                    db.collection("1").document(i.id).delete()
+                    break
+            st.markdown("Xóa thành công")
+    
 # Valid combinations of backends and targets
 backend_target_pairs = [
     [cv.dnn.DNN_BACKEND_OPENCV, cv.dnn.DNN_TARGET_CPU],
@@ -446,11 +517,11 @@ def Verification_with_Class():
     st.markdown("##### * Một số lưu ý:")
     st.write(" - Để đảm bảo kết quả tốt nhất thì ảnh phải không bị mờ, nhiễu")
     st.write(" - Ứng dụng này có thể nhận diện khuôn mặt có kích thước từ **10x10** đến **300x300** pixels")
-    backend_id = backend_target_pairs[args.backend_target][0]
-    target_id = backend_target_pairs[args.backend_target][1]
+    backend_id = backend_target_pairs[0][0]
+    target_id = backend_target_pairs[0][1]
     # Instantiate SFace for face recognition
     recognizer = SFace(modelPath='./services/face_verification/face_recognition_sface_2021dec.onnx',
-                       disType=args.dis_type,
+                       disType=0,
                        backendId=backend_id,
                        targetId=target_id)
     # Instantiate YuNet for face detection
@@ -469,15 +540,16 @@ def Verification_with_Class():
     lst_dataset = []
     for i in range(len(lst_image_path)):
         img = cv.imread(path_dataset + "/" + lst_image_path[i])
-        max_size = 250
+        max_size = 640
         w = min(img.shape[1], max_size)
         h = w * img.shape[0] // img.shape[1]
-        
         img = cv.resize(img, (w, h))
         lst_image.append(img)
         detector.setInputSize([img.shape[1], img.shape[0]])
         faces1 = detector.infer(img)
-        lst_dataset.append((faces1, i))
+        feature = []
+        for face in faces1:
+            lst_dataset.append((recognizer.infer(img, face[:-1]), i))
     image = st.file_uploader("Tải ảnh lớp học", type=["png", "jpg", "jpeg"])
     if image is None:
         st.markdown("Vui lòng tải ảnh lên trước khi **Submit**")
@@ -487,21 +559,27 @@ def Verification_with_Class():
         img = cv.cvtColor(np.array(img), cv.COLOR_RGB2BGR)
         image_class = img.copy()
     
-    # Detect faces
+        # Detect faces
         detector.setInputSize([img.shape[1], img.shape[0]])
         faces = detector.infer(img)
+        feature = []
+        for face in faces:
+            feature.append(recognizer.infer(img, face[:-1]))
+        feature = np.asarray(feature)
         if len(faces) == 0:
             st.markdown("Không tìm thấy khuôn mặt trong ảnh này. Vui lòng tải lên ảnh khác để **nhận diện** tốt hơn")
         else:
             scores = []
             matches = []
             lst_id = []
-            for (faces1, id) in lst_dataset:
+            for (feature1, id) in lst_dataset:
                 best_score = 0
                 best_id = -1
-                for face in faces:
-                    result = recognizer.match(lst_image[id], lst_dataset[id][0][:-1], img, face[:-1])
+                for i in range(len(faces)):
+                    feature1 = np.array(feature1)
+                    result = recognizer.match_ft(feature1, feature[i])
                     score, match = result[0], result[1]
+                    print(score, match, id)
                     if match == 1 and score > best_score:
                         best_score = score
                         best_id = id
@@ -522,7 +600,7 @@ def Verification_with_Class():
                     c = st.columns(len(lst_id))
                     for i in range(len(lst_id)):
                         name = os.path.splitext(lst_image_path[lst_id[i]])[0]
-                        c[i].image(lst_image[lst_id[i]], caption=name, channels="BGR")
+                        c[i].image(lst_image[lst_id[i]], caption=name, channels="BGR", use_column_width=True)
                 else:
                     st.markdown("Không nhận diện được thành viên nào trong bức ảnh")
 
