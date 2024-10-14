@@ -5,6 +5,7 @@ from firebase_admin import credentials
 from google.cloud import firestore, storage
 from PIL import Image, ImageOps
 from google.cloud.firestore import FieldFilter as fil
+from io import BytesIO
 
 import cv2 as cv
 import pandas as pd
@@ -17,6 +18,8 @@ import os
 import argparse
 import time
 import random
+import requests
+
 
 sys.path.append("./services") 
 # from services.face_verification.yunet import YuNet
@@ -54,7 +57,7 @@ def get_url_Image(path):
 #             public_url2 = read_Image(file_list[2])
 #             lst_TheSV.append(f"<img src='{public_url2}' width='100'>")
 #         # print(list(blobs.prefixes))
-st.cache_data(ttl="2h")
+@st.cache_data(ttl="2h")
 def get_Info():
     lst_Ten = []
     lst_Masv = []
@@ -77,6 +80,8 @@ def get_Info():
         lst_TheSV.append(url_TheSV)
     return lst_Ten, lst_Masv, lst_ChanDung, lst_TheSV
 
+
+@st.cache_data(ttl="2h")
 def Table_of_Data():
     doc = db.collection('1').get()
     lent = len(doc)
@@ -495,9 +500,9 @@ def YuNet_and_Sface():
 
         # Match
         if len(faces1) == 0:
-            st.markdown("Không tìm thấy ảnh **Thẻ sv**")
+            st.markdown("Không tìm thấy khuôn mặt ở **Thẻ sv**")
         if len(faces2) == 0:
-            st.markdown("Không tìm thấy ảnh **Chân dung**")
+            st.markdown("Không tìm thấy khuôn mặt ở ảnh **Chân dung**")
         if len(faces1) > 0 and len(faces2) > 0:
             scores = []
             matches = []
@@ -510,6 +515,14 @@ def YuNet_and_Sface():
             image = visualize(img1, faces1, img2, faces2, matches, scores)
             if st.button("Submit"):
                 st.image(image, channels="BGR")
+    
+def get_image_with_url(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        image = Image.open(BytesIO(response.content))
+        image = cv.cvtColor(np.array(image), cv.COLOR_RGB2BGR)
+        return image
+    return None
     
 def Verification_with_Class():
     st.markdown("#### 3. Ứng dụng nhận diện khuôn mặt trong lớp học")
@@ -534,78 +547,75 @@ def Verification_with_Class():
                      targetId=target_id)
     c1, c2 = st.columns(2)
     dataset_image = []
-    path_dataset = './images/Faces_dataset'
-    lst_image_path = os.listdir(path_dataset)
+    # path_dataset = './images/Faces_dataset'
+    lst_Ten, lst_Masv, lst_ChanDung, lst_TheSV = get_Info()
     lst_image = []
     lst_dataset = []
-    for i in range(len(lst_image_path)):
-        img = cv.imread(path_dataset + "/" + lst_image_path[i])
+    lst_image_path = []
+    dataset_feature = []
+    # Lấy ảnh từ Dataset
+    for i in range(len(lst_ChanDung)):
+        if lst_ChanDung[i] == "":
+            continue
+        img = get_image_with_url(get_url(lst_ChanDung[i]))
+        if img is None:
+            continue
+        lst_image_path.append(remove_accents(lst_Ten[i]))
         max_size = 640
         w = min(img.shape[1], max_size)
         h = w * img.shape[0] // img.shape[1]
         img = cv.resize(img, (w, h))
-        lst_image.append(img)
         detector.setInputSize([img.shape[1], img.shape[0]])
-        faces1 = detector.infer(img)
-        feature = []
-        for face in faces1:
-            lst_dataset.append((recognizer.infer(img, face[:-1]), i))
-    image = st.file_uploader("Tải ảnh lớp học", type=["png", "jpg", "jpeg"])
-    if image is None:
-        st.markdown("Vui lòng tải ảnh lên trước khi **Submit**")
-    if image is not None:
-        img = Image.open(image)
-        img = ImageOps.exif_transpose(img)
-        img = cv.cvtColor(np.array(img), cv.COLOR_RGB2BGR)
-        image_class = img.copy()
-    
-        # Detect faces
-        detector.setInputSize([img.shape[1], img.shape[0]])
-        faces = detector.infer(img)
-        feature = []
-        for face in faces:
-            feature.append(recognizer.infer(img, face[:-1]))
-        feature = np.asarray(feature)
-        if len(faces) == 0:
-            st.markdown("Không tìm thấy khuôn mặt trong ảnh này. Vui lòng tải lên ảnh khác để **nhận diện** tốt hơn")
-        else:
-            scores = []
-            matches = []
-            lst_id = []
-            for (feature1, id) in lst_dataset:
-                best_score = 0
-                best_id = -1
-                for i in range(len(faces)):
-                    feature1 = np.array(feature1)
-                    result = recognizer.match_ft(feature1, feature[i])
-                    score, match = result[0], result[1]
-                    print(score, match, id)
-                    if match == 1 and score > best_score:
-                        best_score = score
-                        best_id = id
-                if best_id != -1:    
-                    x, y, w, h = faces[best_id][:4]
-                    lst_id.append(best_id)
-                    x = int(x)
-                    y = int(y)
-                    w = int(w)
-                    h = int(h)
-                    image_class = cv.rectangle(image_class, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                    name = os.path.splitext(lst_image_path[best_id])[0]
-                    image_class = cv.putText(image_class, name, (x, y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-            if st.button("Tiến hành nhận diện"):
-                st.image(image_class, channels="BGR")
-                if len(lst_id) > 0:
-                    st.markdown("Danh sách các thành viên được nhận diện trong bức ảnh:")
-                    c = st.columns(len(lst_id))
-                    for i in range(len(lst_id)):
-                        name = os.path.splitext(lst_image_path[lst_id[i]])[0]
-                        c[i].image(lst_image[lst_id[i]], caption=name, channels="BGR", use_column_width=True)
-                else:
-                    st.markdown("Không nhận diện được thành viên nào trong bức ảnh")
-
-
-
+        faces_dataset = detector.infer(img)
+        # Trích xuất đặc trừng từng khuôn mặt trong dataset
+        for face in faces_dataset:
+            dataset_feature.append((recognizer.infer(img, face[:-1]), i))
+        
+        
+    image_uploaded = c1.file_uploader("Tải ảnh lớp học", type=["png", "jpg", "jpeg"])
+    if image_uploaded is not None:
+        image_class = Image.open(image_uploaded)
+        image_class = ImageOps.exif_transpose(image_class)
+        image_class = cv.cvtColor(np.array(image_class), cv.COLOR_RGB2BGR)
+        res_image = image_class.copy()
+        detector.setInputSize([image_class.shape[1], image_class.shape[0]])
+        faces = detector.infer(image_class)
+        features_class = []
+        for face_class in faces:
+            features_class.append(recognizer.infer(image_class, face_class[:-1]))
+        lst_results_id = []
+        for (feature_dt, id) in dataset_feature:
+            best_score = 0.4
+            best_id = -1
+            id_path = -1
+            for i in range(len(faces)):
+                feature_dt = np.asarray(feature_dt)
+                features_class[i] = np.asarray(features_class[i])
+                results = recognizer.match_ft(feature_dt, features_class[i])
+                score, match = results[0], results[1]
+                if match == 1 and score > best_score:
+                    best_score = score
+                    best_id = i
+                    id_path = id
+            if best_id != -1:
+                x, y, w, h = map(int, faces[best_id][:4])
+                res_image = cv.rectangle(res_image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                res_image = cv.putText(res_image, lst_image_path[id_path], (x, y - 5), cv.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                lst_results_id.append(best_id)
+        if st.button("Tiến hành nhận diện"):
+            mark = {}
+            for i in range(len(faces)):
+                mark[i] = 0
+            for i in range(len(lst_results_id)):
+                idx = lst_results_id[i]
+                mark[idx] = 1
+            for i in range(len(faces)):
+                if mark[i] == 0:
+                    x, y, w, h = map(int, faces[i][:4])
+                    res_image = cv.rectangle(res_image, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                    
+            st.image(res_image, channels="BGR")
+            
 def App():
     st.markdown("#### 1. Thông tin sinh viên")
     get_Info()
