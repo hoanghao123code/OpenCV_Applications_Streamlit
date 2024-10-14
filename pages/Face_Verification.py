@@ -357,16 +357,24 @@ def CRUD():
         selected_name = st.selectbox("Chọn sinh viên muốn xóa thông tin", lst_Ten)
         if st.button("Xóa sinh viên"):
             st.cache_data.clear()
-            doc = db.collection("1").stream()
-            for i in doc:
-                doc_data = i.to_dict()
-                Ten = doc_data.get('Ten')
-                # Masv = doc_data.get('Ma_sinh_vien')
-                if Ten == selected_name:
-                    db.collection("1").document(i.id).delete()
-                    break
-            st.markdown("Xóa thành công")
-    
+            # st.warning("Bạn có chắc chắn muốn xóa không")
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                doc = db.collection("1").stream()
+                # if st.button("Có"):
+                st.cache_data.clear()
+                for i in doc:
+                    doc_data = i.to_dict()
+                    Ten = doc_data.get('Ten')
+                    print(Ten)
+                    # Masv = doc_data.get('Ma_sinh_vien')
+                    if Ten == selected_name:
+                        db.collection("1").document(i.id).delete()
+                        st.success("Xóa thành công")
+                        break
+            # with col2:
+            #     if st.button("Không"):
+            #         canceled = 1
 # Valid combinations of backends and targets
 backend_target_pairs = [
     [cv.dnn.DNN_BACKEND_OPENCV, cv.dnn.DNN_TARGET_CPU],
@@ -475,8 +483,8 @@ def YuNet_and_Sface():
                      backendId=backend_id,
                      targetId=target_id)
     c1, c2 = st.columns(2)
-    image1 = c1.file_uploader("Tải ảnh thẻ sinh viên", type=["png", "jpg", "jpeg"])
-    image2 = c2.file_uploader("Tải ảnh chân dung", type=["png", "jpg", "jpeg"])
+    image1 = c1.file_uploader("Tải ảnh 1", type=["png", "jpg", "jpeg"])
+    image2 = c2.file_uploader("Tải ảnh 2", type=["png", "jpg", "jpeg"])
     if image1 is not None and image2 is not None:
         img1 = Image.open(image1)
         img1 = ImageOps.exif_transpose(img1)
@@ -500,9 +508,9 @@ def YuNet_and_Sface():
 
         # Match
         if len(faces1) == 0:
-            st.markdown("Không tìm thấy khuôn mặt ở **Thẻ sv**")
+            st.markdown("Không tìm thấy khuôn mặt ở **Ảnh 1**")
         if len(faces2) == 0:
-            st.markdown("Không tìm thấy khuôn mặt ở ảnh **Chân dung**")
+            st.markdown("Không tìm thấy khuôn mặt ở **Ảnh 2**")
         if len(faces1) > 0 and len(faces2) > 0:
             scores = []
             matches = []
@@ -584,6 +592,7 @@ def Verification_with_Class():
         for face_class in faces:
             features_class.append(recognizer.infer(image_class, face_class[:-1]))
         lst_results_id = []
+        lst_name = []
         for (feature_dt, id) in dataset_feature:
             best_score = 0.4
             best_id = -1
@@ -598,22 +607,26 @@ def Verification_with_Class():
                     best_id = i
                     id_path = id
             if best_id != -1:
+                # print(lst_image_path[id_path], best_score)
                 x, y, w, h = map(int, faces[best_id][:4])
                 res_image = cv.rectangle(res_image, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 res_image = cv.putText(res_image, lst_image_path[id_path], (x, y - 5), cv.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                lst_name.append(lst_Ten[id_path])
                 lst_results_id.append(best_id)
+        mark = {}
+        for i in range(len(faces)):
+            mark[i] = 0
+        for i in range(len(lst_results_id)):
+            idx = lst_results_id[i]
+            mark[idx] = 1
+        for i in range(len(faces)):
+            if mark[i] == 0:
+                x, y, w, h = map(int, faces[i][:4])
+                res_image = cv.rectangle(res_image, (x, y), (x + w, y + h), (0, 0, 255), 2)
         if st.button("Tiến hành nhận diện"):
-            mark = {}
-            for i in range(len(faces)):
-                mark[i] = 0
-            for i in range(len(lst_results_id)):
-                idx = lst_results_id[i]
-                mark[idx] = 1
-            for i in range(len(faces)):
-                if mark[i] == 0:
-                    x, y, w, h = map(int, faces[i][:4])
-                    res_image = cv.rectangle(res_image, (x, y), (x + w, y + h), (0, 0, 255), 2)
-                    
+            st.markdown("Danh sách các sinh viên có mặt trong lớp:")
+            for i in range(len(lst_name)):
+                st.write(" - " + lst_name[i])
             st.image(res_image, channels="BGR")
 
 
