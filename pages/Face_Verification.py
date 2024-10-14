@@ -572,7 +572,7 @@ def Verification_with_Class():
             dataset_feature.append((recognizer.infer(img, face[:-1]), i))
         
         
-    image_uploaded = c1.file_uploader("Tải ảnh lớp học", type=["png", "jpg", "jpeg"])
+    image_uploaded = st.file_uploader("Tải ảnh lớp học", type=["png", "jpg", "jpeg"])
     if image_uploaded is not None:
         image_class = Image.open(image_uploaded)
         image_class = ImageOps.exif_transpose(image_class)
@@ -615,7 +615,8 @@ def Verification_with_Class():
                     res_image = cv.rectangle(res_image, (x, y), (x + w, y + h), (0, 0, 255), 2)
                     
             st.image(res_image, channels="BGR")
-            
+
+
 def App():
     st.markdown("#### 1. Thông tin sinh viên")
     get_Info()
