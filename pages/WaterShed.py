@@ -492,8 +492,8 @@ def calc():
     
     Plot_IoU(lst_IoU_1, lst_IoU_2, lst_thresh)
     Plot_Dice(lst_dice_1, lst_dice_2, lst_thresh)
-    st.markdown("#### **Trong đó:**")
-    st.markdown(f'<span style = "color:red; font-size:18px;"> - Threshold : Tỉ lệ % của các điểm Unknown được chọn là Sure foreground </span>', unsafe_allow_html=True)
+    # st.markdown("#### **Trong đó:**")
+    # st.markdown(f'<span style = "color:red; font-size:18px;"> - Threshold : Tỉ lệ % của các điểm Unknown được chọn là Sure foreground </span>', unsafe_allow_html=True)
     # Tìm tham số tốt nhất
     
     best_kernel, best_thresh = best_para(lst_IoU_1, lst_IoU_2, lst_dice_1, lst_dice_2, lst_thresh)
@@ -507,12 +507,20 @@ def Text_PineLine():
     st.markdown("- **(3)**: Sử dụng thuật toán **Inverse Binary Thresholding** và **Otsu's Binarization** để chuyển thành ảnh **Binary**")
     st.markdown("- **(4)**: Dựa vào ảnh **Binary** để xác định **Distance transform**")
     st.markdown("- **(5)**: Dựa vào ảnh **Binary** để xác định **Sure background**")
-    st.markdown("- **(6)**: Dựa vào **Distance transform** để xác định **Sure foreground** " 
-               + "(**Sure foreground** được xác định bằng cách giữ lại những vùng có giá trị lớn hơn ngưỡng **(Threshsold)** trong ảnh sau khi áp dụng **Distance transform**)")
+    st.markdown("- **(6)**: Dựa vào **Distance transform** để xác định **Sure foreground**")
     st.markdown("- **(7), (8)**: Dựa vào **Sure foreground** và **Sure background** để xác định vùng **Unknown**")
     st.markdown("- **(9), (10)**: Dựa vào **Sure foreground** và **Unknown** để tạo ra **Marker**")
     
     st.markdown("- **(11)**: Xác định đối tượng phân đoạn dựa vào thuật toán **Watershed Transform**")
+    st.markdown("Công thức xác định 1 điểm là **Sure foreground:**")
+    st.markdown("-  **D(i,j) > threshold * max(D)**")
+    st.markdown("-  **Trong đó:**")
+    # cc2.markdown(f'   <p style="text-indent: 90px;"> <span style = "color:red; font-size:22px;"> IoU = {ret[1]:.2f}, Dice = {dice[1]:.2f} </span>', unsafe_allow_html=True)
+    
+    st.markdown('<p style="text-indent: 20px;"> <span style = "color:blue; font-size:16px;"> - D(i, j) là Distance transform tại ô (i, j) </span>' , unsafe_allow_html=True)
+    st.markdown('<p style="text-indent: 20px;"><span style = "color:blue; font-size:16px;"> - Threshold : Tỉ lệ % của các điểm Unknown được chọn là Sure foreground </span>' , unsafe_allow_html=True)
+    
+    
     
 def Example_threshold():
     st.markdown("#### * Ví dụ minh họa kết quả chọn Threshold")
@@ -527,7 +535,7 @@ def run():
     img_training(2, 3)
     
     st.markdown("### 2. Quá trình phân đoạn kí tự bằng thuật toán Watershed Segmentation")
-    image_pipe_line = cv.imread('./images/pipeline_watershed.png')
+    image_pipe_line = cv.imread('./images/pipeline_watershed.PNG')
     st.image(image_pipe_line, channels='BGR')
     Text_PineLine()
     

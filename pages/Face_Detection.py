@@ -196,10 +196,14 @@ def Dataset_and_Training():
     st.markdown("##### **2.1 Các tham số trong quá trình huấn luyện**")
     st.write(" - **numPos : 400** (Số lượng mẫu **Positive** (chứa khuôn mặt) được dùng trong huấn luyện cho mỗi stage)")
     st.write(" - **numNeg : 400** (Số lượng mẫu **Negative** (không chứa khuôn mặt) được dùng trong huấn luyện cho mỗi stage)")
-    st.write(" - **numStages : 5** (Số lượng Cascade stages được train)")
+    st.write(" - **numStages : 4** (Số lượng Cascade stages được train)")
     st.write(" - **w : 24, h : 24** (Lần lượt là chiều rộng và chiều cao của object)")
     st.write(" - **minHitRate : 0.995** (Ít nhất 99.5% các mẫu **Positive** phải được phát hiện đúng (không bỏ sót). Giai đoạn huấn luyện sẽ tiếp tục cho đến khi đạt được tỉ lệ này)")
     st.write(" - **maxFalseAlarmRate : 0.5:** (Trong mỗi giai đoạn huấn luyện, tỉ lệ phát hiện nhầm các mẫu **Negative** (nhận nhầm là **Positive**) phải dưới 50%)")
+    st.write("  - **Sau khi huấn luyện:**")
+    st.markdown('<p style="text-indent: 20px;"><span style = "color:blue; font-size:16px;"> - Số lượng Feature : 12' , unsafe_allow_html=True)
+    st.markdown('<p style="text-indent: 20px;"><span style = "color:blue; font-size:16px;"> - Số lượng Feature cho từng stage lần lượt là : [3, 3, 3, 3]' , unsafe_allow_html=True)
+    
     st.markdown("### 3. Huấn luyện với KNN và đánh giá")
     st.markdown("##### **3.1 Độ đo: IoU**")
     image_IoU =  cv.imread('./images/image_IoU.png')
@@ -212,7 +216,7 @@ def Dataset_and_Training():
     st.write(" - Tham số K tốt nhất là **K = 20** với **Average IoU = 0.23**")
     
     st.markdown("##### 3.3 Kết quả khi áp dụng vào tập Test")
-    image_res = cv.imread('./images/Face_Detection/Result/Result_of_All.PNG')
+    image_res = cv.imread('./images/Face_Detection/Result/Result_of_Test.PNG')
     st.image(image_res, caption="Kết quả sau khi áp dụng tham số K tốt nhất vào tập Test", channels="BGR")
 
 
