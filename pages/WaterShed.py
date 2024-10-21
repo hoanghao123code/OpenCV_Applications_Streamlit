@@ -535,7 +535,7 @@ def run():
     img_training(2, 3)
     
     st.markdown("### 2. Quá trình phân đoạn kí tự bằng thuật toán Watershed Segmentation")
-    image_pipe_line = cv.imread('./images/pipeline_watershed.PNG')
+    image_pipe_line = cv.imread('./images/Watershed/pipeline_watershed.PNG')
     st.image(image_pipe_line, channels='BGR')
     Text_PineLine()
     
