@@ -22,10 +22,8 @@ st.set_page_config(
 st.title('🎈Semantic Keypoint Detection')
 
 
-
 sift = cv.SIFT_create()
 
-# surf = cv.xfeatures2d.SURF_create(400)
 
 orb = cv.ORB_create()
 
