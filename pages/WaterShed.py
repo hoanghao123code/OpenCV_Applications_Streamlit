@@ -550,6 +550,7 @@ def run():
         calc()
     # process()
 
+
 if len(list_images) > 0:
     run()
 
