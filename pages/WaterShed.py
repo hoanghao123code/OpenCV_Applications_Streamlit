@@ -40,17 +40,17 @@ def Dice_coefficient(mask_pred, mask_gt):
     dice = (2.0 * intersection) / (sum_pred + sum_gt)
     return dice
 
-path = ['./images/1xemay278.jpg', './images/1xemay544.jpg', 
-        './images/1xemay645.jpg', './images/1xemay1458.jpg']
+path = ['./images/Watershed/1xemay278.jpg', './images/Watershed/1xemay544.jpg', 
+        './images/Watershed/1xemay645.jpg', './images/Watershed/1xemay1458.jpg']
 
-path_gt = ['./images/1xemay278.png', './images/1xemay544.png', 
-        './images/1xemay645.png', './images/1xemay1458.png']
+path_gt = ['./images/Watershed/1xemay278.png', './images/Watershed/1xemay544.png', 
+        './images/Watershed/1xemay645.png', './images/Watershed/1xemay1458.png']
 
 name = ['1xemay278.jpg', '1xemay544.jpg', '1xemay645.jpg', '1xemay1458.jpg']
 
 list_image = ["Ảnh 1xemay278", "Ảnh 1xemay544", "Ảnh 1xemay645", "Ảnh 1xemay1458"]
 
-path_IoU_img = './images/image_IoU.png'
+path_IoU_img = './images/Watershed/image_IoU.png'
 image_IoU = Image.open(path_IoU_img)
 
 list_images = []
@@ -177,7 +177,7 @@ def Plot_IoU(IoU_1, IoU_2, thresh):
 def Plot_Dice(lst_dice_1, lst_dice_2, thresh):
     # st.markdown("#### * Độ đo: Dice Coefficient")
     st.markdown(f'  <span style = "color:blue; font-size:24px;"> * Độ đo: Dice Coefficient </span>', unsafe_allow_html=True)
-    image_dice = Image.open('./images/dice_coefficient.png')
+    image_dice = Image.open('./images/Watershed/dice_coefficient.png')
     st.image(image_dice)
     
     #Plot theo Dice coefficient
@@ -535,7 +535,7 @@ def run():
     img_training(2, 3)
     
     st.markdown("### 2. Quá trình phân đoạn kí tự bằng thuật toán Watershed Segmentation")
-    image_pipe_line = cv.imread('./images/Watershed/pipeline_watershed.PNG')
+    image_pipe_line = cv.imread('./images/Watershed/pipe_line_watershed.PNG')
     st.image(image_pipe_line, channels='BGR')
     Text_PineLine()
     

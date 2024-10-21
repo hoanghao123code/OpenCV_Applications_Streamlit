@@ -624,9 +624,10 @@ def Verification_with_Class():
                 x, y, w, h = map(int, faces[i][:4])
                 res_image = cv.rectangle(res_image, (x, y), (x + w, y + h), (0, 0, 255), 2)
         if st.button("Tiến hành nhận diện"):
-            st.markdown("Danh sách các sinh viên có mặt trong lớp:")
-            for i in range(len(lst_name)):
-                st.write(" - " + lst_name[i])
+            if len(lst_name) > 0:
+                st.markdown("Danh sách các sinh viên có mặt trong lớp:")
+                for i in range(len(lst_name)):
+                    st.write(" - " + lst_name[i])
             st.image(res_image, channels="BGR")
 
 
