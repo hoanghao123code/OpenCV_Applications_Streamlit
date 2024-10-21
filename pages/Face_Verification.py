@@ -27,6 +27,13 @@ sys.path.append("./services")
 from face_verification.yunet import YuNet
 from face_verification.sface import SFace
 
+
+st.set_page_config(
+    page_title="🎈Hoang Hao's Applications",
+    page_icon=Image.open("./images/Logo/logo_welcome.png"),
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 st.title("🎈Face Verification App")
 
 # Khởi tạo Firestore Client bằng credentials từ file JSON

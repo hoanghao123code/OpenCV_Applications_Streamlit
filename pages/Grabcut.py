@@ -13,6 +13,13 @@ from PIL import Image, ImageOps, ImageDraw
 # from rembg import remove
 from streamlit_drawable_canvas import st_canvas
 
+
+st.set_page_config(
+    page_title="🎈Hoang Hao's Applications",
+    page_icon=Image.open("./images/Logo/logo_welcome.png"),
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 st.title('🎈Hoang Hao GrabCut App')
 
 

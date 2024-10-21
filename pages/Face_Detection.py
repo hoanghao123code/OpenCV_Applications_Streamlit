@@ -26,6 +26,13 @@ from skimage.feature import haar_like_feature
 from skimage.feature import haar_like_feature_coord
 from skimage.feature import draw_haar_like_feature
 
+
+st.set_page_config(
+    page_title="🎈Hoang Hao's Applications",
+    page_icon=Image.open("./images/Logo/logo_welcome.png"),
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 st.title("🎈Face Detection App")
 
 # cascade_file = './images/Face_detect/cascade.xml'

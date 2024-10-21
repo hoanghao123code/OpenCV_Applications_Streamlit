@@ -17,6 +17,13 @@ from PIL import Image
 from streamlit_drawable_canvas import st_canvas
 import matplotlib.pyplot as plt
 
+st.set_page_config(
+    page_title="🎈Hoang Hao's Applications",
+    page_icon=Image.open("./images/Logo/logo_welcome.png"),
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 st.title("🎈WaterShed Segmentation App")
 
 def IoU(mask_pred, mask_gt):
