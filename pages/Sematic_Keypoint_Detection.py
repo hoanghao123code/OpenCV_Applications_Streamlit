@@ -657,6 +657,7 @@ def Text_of_App():
              + "**Precision** và **Recall** của **SIFT** cao hơn **ORB**")
     st.write("  - **Ellipses** và **Multiple Polygons**: Cả hai thuật toán đều có **Precision** và **Recall** thấp cho các hình dạng này, do chúng có ít đặc trưng nổi bật hoặc quá phức tạp để các thuật toán này dễ dàng phát hiện.")
 
+
 def Text_of_Superpoint_rotation():
     dg = "\u00B0"
     st.header("1. Thiết lập thí nghiệm")
