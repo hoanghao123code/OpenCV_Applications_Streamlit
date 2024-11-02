@@ -8,7 +8,7 @@ import tempfile
 import os
 import pickle
 import matplotlib.pyplot as plt
-import torch
+# import torch
 import pandas as pd
 
 sys.path.append("./services") 
