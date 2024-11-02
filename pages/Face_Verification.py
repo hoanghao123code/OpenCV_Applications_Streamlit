@@ -31,7 +31,7 @@ from face_verification.sface import SFace
 st.set_page_config(
     page_title="🎈Hoang Hao's Applications",
     page_icon=Image.open("./images/Logo/logo_welcome.png"),
-    layout="wide",
+    # layout="wide",
     initial_sidebar_state="expanded",
 )
 st.title("🎈Face Verification App")
@@ -250,24 +250,24 @@ def CRUD():
         st.session_state.deleted_clicked = False
         
         
-    if c1.button('Tìm kiếm'):
+    if c1.button(":material/search:" ' Tìm kiếm'):
         st.session_state.search_clicked = True
         st.session_state.add_clicked = False
         st.session_state.update_clicked = False
         st.session_state.deleted_clicked = False
         
-    if c2.button('Thêm'):
+    if c2.button(":material/add:" ' Thêm'):
         st.session_state.search_clicked = False
         st.session_state.add_clicked = True
         st.session_state.update_clicked = False
         st.session_state.deleted_clicked = False
-    if c3.button("Sửa"):
+    if c3.button(":material/edit:" " Sửa"):
         st.session_state.add_clicked = False
         st.session_state.search_clicked = False
         st.session_state.update_clicked = True
         st.session_state.deleted_clicked = False
     
-    if c4.button("Xóa"):
+    if c4.button(":material/delete:" " Xóa"):
         st.session_state.add_clicked = False
         st.session_state.search_clicked = False
         st.session_state.update_clicked = False

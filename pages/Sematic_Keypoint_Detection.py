@@ -8,7 +8,11 @@ import tempfile
 import os
 import pickle
 import matplotlib.pyplot as plt
+import torch
+import pandas as pd
 
+sys.path.append("./services") 
+from semantic_keypoint_detection.Superpoint import SuperPointNet, SuperPointFrontend
 from io import BytesIO
 from PIL import Image, ImageOps, ImageDraw
 from scipy.spatial.distance import cdist
@@ -118,7 +122,6 @@ def draw_keypoints(image, keypoints):
     for keypoint in keypoints:
         x, y = int(keypoint[1]), int(keypoint[0])
         cv.circle(image, (x, y), radius=5, color=(0, 255, 0), thickness=2)  # Màu xanh lá
-    st.image(image)
     return image
 
 def plot_metric_precision(precision_SIFT, precision_ORB, c):
@@ -126,42 +129,28 @@ def plot_metric_precision(precision_SIFT, precision_ORB, c):
     values1 = np.array(precision_SIFT)
     values2 = np.array(precision_ORB)
     
-    x = np.arange(len(categories))  
-    width = 0.35 
+    data = {
+            'Shapes': categories,
+            'Precision of ORB': values2,
+            'Precision of SIFT': values1,
+        }
 
-    fig, ax = plt.subplots()
-    rects1 = ax.bar(x - width/2, values1, width, label='Precision of SIFT')
-    rects2 = ax.bar(x + width/2, values2, width, label='Precision of ORB')
-
-    ax.set_ylabel('Average Precision')
-    ax.set_title('Biểu đồ so sánh Average Precision khi áp dụng thuật toán SIFT và ORB')
-    ax.set_xticks(x)
-    ax.set_xticklabels(categories, rotation = 90)
-    ax.legend()
-
-    # Hiển thị biểu đồ trong Streamlit
-    c.pyplot(fig)
+    df = pd.DataFrame(data)
+    c.bar_chart(df, x = "Shapes", stack = False, horizontal=True, color = ["#19c9fe", "#fcc200"])
     
 def plot_metric_recall(recall_SIFT, recall_ORB, c):
     categories = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
     values1 = np.array(recall_SIFT)
     values2 = np.array(recall_ORB)
     
-    x = np.arange(len(categories))  
-    width = 0.35 
+    data = {
+        'Shapes': categories,
+        'Recall of ORB': values2,
+        'Recall of SIFT': values1,
+    }
 
-    fig, ax = plt.subplots()
-    rects1 = ax.bar(x - width/2, values1, width, label='Recall of SIFT')
-    rects2 = ax.bar(x + width/2, values2, width, label='Recall of ORB')
-
-    ax.set_ylabel('Average Recall')
-    ax.set_title('Biểu đồ so sánh Average Recall khi áp dụng thuật toán SIFT và ORB')
-    ax.set_xticks(x)
-    ax.set_xticklabels(categories, rotation = 90)
-    ax.legend()
-
-    # Hiển thị biểu đồ trong Streamlit
-    c.pyplot(fig)
+    df = pd.DataFrame(data)
+    c.bar_chart(df, x = "Shapes", stack = False, horizontal=True, color = ["#19c9fe", "#fcc200"])
 
 
 def plot_metric():
@@ -303,32 +292,49 @@ def extract_ORB_keypoints_and_descriptors(img):
     kp, desc = orb.detectAndCompute(np.squeeze(gray_img), None)
 
     return kp, desc
-def extract_superpoint_keypoints_and_descriptors(keypoint_map, descriptor_map,
-                                                 keep_k_points=1000):
 
-    def select_k_best(points, k):
-        """ Select the k most probable points (and strip their proba).
-        points has shape (num_points, 3) where the last coordinate is the proba. """
-        sorted_prob = points[points[:, 2].argsort(), :2]
-        start = min(k, points.shape[0])
-        return sorted_prob[-start:, :]
+def draw_keypoints_superpoint(image, keypoints):
+    for keypoint in keypoints:
+        x, y = int(keypoint[0]), int(keypoint[1])
+        cv.circle(image, (x, y), radius=5, color=(0, 255, 0), thickness=2)  # Màu xanh lá
+    st.image(image)
+    return image
 
-    # Extract keypoints
-    keypoints = np.where(keypoint_map > 0)
-    prob = keypoint_map[keypoints[0], keypoints[1]]
-    keypoints = np.stack([keypoints[0], keypoints[1], prob], axis=-1)
+fe = SuperPointFrontend(weights_path = './services/semantic_keypoint_detection/superpoint_v1.pth', 
+                            nms_dist = 4, 
+                            conf_thresh = 0.015,
+                            nn_thresh = 0.7,
+                            cuda = False)
 
-    keypoints = select_k_best(keypoints, keep_k_points)
-    keypoints = keypoints.astype(int)
+def extract_superpoint_keypoint_and_descriptor(img):
+    
+    # if os.path.exists('./services/semantic_keypoint_detection/superpoint_v1.pth'):
+    #     print(1)
+    img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    img_gray = img_gray.astype('float32')/255.0
+    
+    pts, desc, heatmap = fe.run(img_gray)
+    # x_coords = pts[0, :]  
+    # y_coords = pts[1, :]
+    # keypoints = np.vstack((x_coords, y_coords)).T
+    # keypoints = [cv.KeyPoint(p[0], p[1], 1) for p in keypoints]
+    return pts, desc, heatmap
 
-    # Get descriptors for keypoints
-    desc = descriptor_map[keypoints[:, 0], keypoints[:, 1]]
+def convert_pts_to_keypoints(pts):
+    keypoints = []
+    for i in range(pts.shape[1]):
+        # Tạo cv2.KeyPoint từ tọa độ (x, y) trong pts
+        kp = cv.KeyPoint(x=pts[0, i], y=pts[1, i], size=1)
+        keypoints.append(kp)
+    return keypoints
 
-    # Convert from just pts to cv.KeyPoints
-    keypoints = [cv.KeyPoint(p[1], p[0], 1) for p in keypoints]
-
-    return keypoints, desc
-
+def convert_pts_to_keypoints_gt(pts):
+    keypoints = []
+    for kp in pts:
+        # Tạo cv2.KeyPoint từ tọa độ (x, y) trong pts
+        kp = cv.KeyPoint(x=kp[0], y = kp[1], size=1)
+        keypoints.append(kp)
+    return keypoints
 
 def match_descriptors(kp1, desc1, kp2, desc2):
     # Match the keypoints with the warped_keypoints with nearest neighbor search
@@ -369,13 +375,49 @@ def preprocess_image(img_file, img_size):
 
     return img_preprocessed, img_orig
 
+def filter_keypoints_and_descriptors(keypoints_gt, keypoints_sift, descriptors_sift, max_distance=4):
+    selected_keypoints = []
+    selected_descriptors = []
 
+    for gt_keypoint in keypoints_gt:
+        
+        gt_pt = np.array([gt_keypoint[1], gt_keypoint[0]])
+        # Tính khoảng cách từ keypoint SIFT đến keypoint ground truth
+        distances = np.array([np.linalg.norm(np.array([kp.pt[0], kp.pt[1]]) - gt_pt) for kp in keypoints_sift])
+        
+        # Lấy các keypoint SIFT có khoảng cách nhỏ hơn hoặc bằng max_distance
+        valid_indices = np.where(distances <= max_distance)[0]
+        
+        if len(valid_indices) > 0:
+            # Nếu có nhiều keypoint thỏa mãn, lấy keypoint gần nhất
+            closest_index = valid_indices[np.argmin(distances[valid_indices])]
+            selected_keypoints.append(keypoints_sift[closest_index])
+            selected_descriptors.append(descriptors_sift[closest_index])
 
-def compare_and_draw_sift_match(image_1, image_2):
-    # Compare sift feature
-    sift_kp1, sift_desc1 = extract_SIFT_keypoints_and_descriptors(image_1)
+    # Chuyển selected_descriptors thành numpy array
+    return selected_keypoints, np.array(selected_descriptors)
+
+def select_indice_keypoint(image, keypoints_gt, keypoints_sift, max_distance=4):
+    selected_indices = []
+    selected_keypoints_groundtruth = []
+    for gt_keypoint in keypoints_gt:
+        
+        gt_pt = np.array([gt_keypoint[1], gt_keypoint[0]])
+        # Tính khoảng cách từ keypoint SIFT đến keypoint ground truth
+        distances = np.array([np.linalg.norm(np.array([kp.pt[0], kp.pt[1]]) - gt_pt) for kp in keypoints_sift])
+        
+        # Lấy các keypoint SIFT có khoảng cách nhỏ hơn hoặc bằng max_distance
+        valid_indices = np.where(distances <= max_distance)[0]
+        if len(valid_indices) > 0:
+            selected_keypoints_groundtruth.append(gt_pt)
+            for indices in valid_indices:
+                selected_indices.append(indices)
+    return selected_indices, selected_keypoints_groundtruth
+
+def compare_and_draw_sift_match(image_1, image_2, label):
+    kp1, desc1 = extract_SIFT_keypoints_and_descriptors(image_1)
+    sift_kp1, sift_desc1 = filter_keypoints_and_descriptors(label, kp1, desc1)
     sift_kp2, sift_desc2 = extract_SIFT_keypoints_and_descriptors(image_2)
-    
     sift_m_kp1, sift_m_kp2, sift_matches = match_descriptors(
                 sift_kp1, sift_desc1, sift_kp2, sift_desc2)
     if sift_m_kp1 is None and sift_m_kp2 is None and sift_matches is None:
@@ -392,16 +434,17 @@ def compare_and_draw_sift_match(image_1, image_2):
                                         singlePointColor=(0, 0, 255))
     accuracy = len(sift_matches) / len(sift_kp1)
     return sift_matched_img, accuracy
-def compare_and_draw_ORB_match(image_1, image_2):
-    # Compare sift feature
-    sift_kp1, sift_desc1 = extract_ORB_keypoints_and_descriptors(image_1)
+    
+def compare_and_draw_ORB_match(image_1, image_2, label):
+    kp1, desc1 = extract_SIFT_keypoints_and_descriptors(image_1)
+    sift_kp1, sift_desc1 = filter_keypoints_and_descriptors(label, kp1, desc1)
+    sift_kp2, sift_desc2 = extract_SIFT_keypoints_and_descriptors(image_2)
     sift_kp2, sift_desc2 = extract_ORB_keypoints_and_descriptors(image_2)
     sift_m_kp1, sift_m_kp2, sift_matches = match_descriptors(
                 sift_kp1, sift_desc1, sift_kp2, sift_desc2)
     if sift_m_kp1 is None and sift_m_kp2 is None and sift_matches is None:
         return image_1, 0.0
     if len(sift_m_kp1) < 4 or len(sift_m_kp2) < 4:
-        # print(type(sift_m_kp1))
         return image_1, 0.0
     sift_H, sift_inliers = compute_homography(sift_m_kp1, sift_m_kp2)
     # Draw sift feature
@@ -413,8 +456,191 @@ def compare_and_draw_ORB_match(image_1, image_2):
     accuracy = len(sift_matches) / len(sift_kp1)
     return sift_matched_img, accuracy
 
+def compare_and_draw_superpoint_match(image_1, image_2, label):
+    image_kp1 = image_1.copy()
+    image_gray = cv.cvtColor(image_kp1, cv.COLOR_BGR2GRAY)
+    image_gray = image_gray.astype('float32') / 255.0
+    pts1, desc_1 = fe.get_descriptor_from_keypoints(image_gray, label)
+    pts2, desc_2, _ = extract_superpoint_keypoint_and_descriptor(image_2)
+    kp1 = convert_pts_to_keypoints(pts1)
+    kp2 = convert_pts_to_keypoints(pts2)
+    desc1 = desc_1.T
+    desc2 = desc_2.T
+    # print(len(kp1), len(kp2))
+    # print(desc_1.shape)
+    # print(desc_2.shape)
+    m_kp1, m_kp2, matches = match_descriptors(kp1, desc1, kp2, desc2)
+    if m_kp1 is None and m_kp2 is None and matches is None:
+        return image_1, 0.0
+    if len(m_kp1) < 4 or len(m_kp2) < 4:
+        return image_1, 0.0
+    H, inliers = compute_homography(m_kp1, m_kp2)
+    # Draw SuperPoint matches
+    matches = np.array(matches)[inliers.astype(bool)].tolist()
+    matched_img = cv.drawMatches(image_1, kp1, image_2, kp2, matches,
+                                    None, matchColor=(0, 255, 0),
+                                    singlePointColor=(0, 0, 255))
+    accuracy = len(matches) / len(kp1)
+    return matched_img, accuracy
+
+def draw_true_keypoint(image, label, type):
+    keypoints = 0
+    desc = 0
+    # type = 1: sift, 2: orb, 3: superpoint
+    
+    if type == 1:
+        keypoints, desc = extract_SIFT_keypoints_and_descriptors(image)
+    elif type == 2:
+        keypoints, desc = extract_ORB_keypoints_and_descriptors(image)
+    else:
+        kp, desc = extract_superpoint_keypoint_and_descriptor(image)
+        keypoints = convert_pts_to_keypoints(kp)
+    id, pt_gt = select_indice_keypoint(image, label, keypoints)
+    i = 0
+    for kp in keypoints:
+        x = int(kp.pt[0])
+        y = int(kp.pt[1])
+        if i in id:
+            cv.circle(image, (x, y), radius=1, color=(0, 0, 255), thickness=2)
+        else:
+            cv.circle(image, (x, y), radius=1, color=(255, 0, 0), thickness=2)
+        i += 1
+    for kp in pt_gt:
+        x = int(kp[0])
+        y = int(kp[1])
+        cv.circle(image, (x, y), radius=4, color= (0, 255, 0), thickness=2)
+    return image
+
+def plot_true_keypoint():
+    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
+                        'draw_polygon', 'draw_star', 'draw_stripes']
+    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
+    lst_image = []
+    c = st.columns(4)
+    for i in range(8):
+        path_image = path_dataset + path[i] + "/" + "images/10.png"
+        path_label = path_dataset + path[i] + "/" + "points/10.npy"
+        image = cv.imread(path_image)
+        label = np.load(path_label)
+        draw_image = draw_true_keypoint(image, label, 1)
+        c[i % 4].image(draw_image, caption=name[i])
+    
+
+def plot_keypoint_groundtruth():
+    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
+                        'draw_polygon', 'draw_star', 'draw_stripes']
+    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
+    lst_image = []
+    c = st.columns(4)
+    for i in range(8):
+        path_image = path_dataset + path[i] + "/" + "images/33.png"
+        path_label = path_dataset + path[i] + "/" + "points/33.npy"
+        image = cv.imread(path_image)
+        label = np.load(path_label)
+        draw_image = draw_keypoints(image, label)
+        c[i % 4].image(draw_image, caption=name[i])
+
+
+def plot_sift():
+    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
+                        'draw_polygon', 'draw_star', 'draw_stripes']
+    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
+    lst_image = []
+    c = st.columns(4)
+    for i in range(8):
+        path_image = path_dataset + path[i] + "/" + "images/90.png"
+        image = cv.imread(path_image)
+        kp, desc = extract_SIFT_keypoints_and_descriptors(image)
+        draw_image = cv.drawKeypoints(image, kp, None, color=(0, 255, 0), flags=0)
+        c[i % 4].image(draw_image, caption=name[i])
+
+def plot_orb():
+    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
+                        'draw_polygon', 'draw_star', 'draw_stripes']
+    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
+    lst_image = []
+    c = st.columns(4)
+    for i in range(8):
+        path_image = path_dataset + path[i] + "/" + "images/90.png"
+        image = cv.imread(path_image)
+        kp, desc = extract_ORB_keypoints_and_descriptors(image)
+        draw_image = cv.drawKeypoints(image, kp, None, color=(0, 255, 0), flags=0)
+        c[i % 4].image(draw_image, caption=name[i])
+
+
+def example_conclusion_sift():
+    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
+                        'draw_polygon', 'draw_star', 'draw_stripes']
+    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
+    c = st.columns([2, 2, 2, 2])
+    c[1].markdown("**Lines**")
+    c[2].markdown("**Stripes**")
+    
+    for i in [3, 7]:
+        path_image = path_dataset + path[i] + "/" + "images/103.png"
+        path_label = path_dataset + path[i] + "/" + "points/103.npy"
+        image = cv.imread(path_image)
+        label = np.load(path_label)
+        image_cpy = image.copy()
+        draw_image_sift = draw_true_keypoint(image, label, 1)
+        draw_image_orb = draw_true_keypoint(image_cpy, label, 2)
+        if i == 3:
+            c[1].image(draw_image_sift, caption="Keypoints of SIFT")
+            c[1].image(draw_image_orb, caption="Keypoints of ORB")
+            
+        else:
+            c[2].image(draw_image_sift, caption="Keypoints of SIFT")
+            c[2].image(draw_image_orb, caption="Keypoints of ORB")
+
+def example_conclusion_orb():
+    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
+                        'draw_polygon', 'draw_star', 'draw_stripes']
+    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
+    c = st.columns([2, 2, 2, 2, 2])
+    c[0].markdown("**Checkerboard**")
+    c[1].markdown("**Cube**")
+    c[2].markdown("**Multiple polygons**")
+    c[3].markdown("**Polygon**")
+    c[4].markdown("**Star**")
+    index = [0, 1, 4, 5, 6]
+    for id in  range(len(index)):
+        i = index[id]
+        path_image = path_dataset + path[i] + "/" + "images/102.png"
+        path_label = path_dataset + path[i] + "/" + "points/102.npy"
+        image = cv.imread(path_image)
+        label = np.load(path_label)
+        image_cpy = image.copy()
+        draw_image_sift = draw_true_keypoint(image, label, 1)
+        draw_image_orb = draw_true_keypoint(image_cpy, label, 2)
+        c[id].image(draw_image_orb, caption="Keypoints of ORB")
+        c[id].image(draw_image_sift, caption="Keypoints of SIFT")
+            
+def example_conclusion_sift_and_orb():
+    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
+                        'draw_polygon', 'draw_star', 'draw_stripes']
+    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
+    c = st.columns([4, 2, 4])
+    c[1].markdown("**Ellipse**")
+    for i in [2]:
+        path_image = path_dataset + path[i] + "/" + "images/103.png"
+        path_label = path_dataset + path[i] + "/" + "points/103.npy"
+        image = cv.imread(path_image)
+        label = np.load(path_label)
+        image_cpy = image.copy()
+        draw_image_sift = draw_true_keypoint(image, label, 1)
+        draw_image_orb = draw_true_keypoint(image_cpy, label, 2)
+        c[1].image(draw_image_sift, caption="Keypoints of SIFT")
+        c[1].image(draw_image_orb, caption="Keypoints of ORB")
+
 def plot_compare_match():
-    # lst_image = get_image_with_100_percent()
+    # lst_image, lst_label = get_image_with_100_percent()
     # rotate = [0, 10, 20, 30, 40]
     # lst_acc_sift = [[] for i in range(len(rotate))]
     # lst_acc_orb = [[] for i in range(len(rotate))]
@@ -440,33 +666,33 @@ def plot_compare_match():
     pickle_file_average_acc_orb = './data_processed/Semantic_Keypoint_Detection/avg_acc_orb.pkl'
     # with open(pickle_file_average_acc_orb, 'wb') as file:
     #     pickle.dump(average_acc_orb, file)
-    average_acc_sift = []
-    average_acc_orb = []
-    with open(pickle_file_average_acc_sift, 'rb') as file:
-        average_acc_sift = pickle.load(file)
+    # average_acc_sift = []
+    # average_acc_orb = []
+    # with open(pickle_file_average_acc_sift, 'rb') as file:
+    #     average_acc_sift = pickle.load(file)
     
-    with open(pickle_file_average_acc_orb, 'rb') as file:
-        average_acc_orb = pickle.load(file)
-    degree_symbol = "\u00B0"
-    categories = [f'0{degree_symbol}', f'10{degree_symbol}', f'20{degree_symbol}', f'30{degree_symbol}', f'40{degree_symbol}']
-    values1 = np.array(average_acc_sift)
-    values2 = np.array(average_acc_orb)
+    # with open(pickle_file_average_acc_orb, 'rb') as file:
+    #     average_acc_orb = pickle.load(file)
+    # degree_symbol = "\u00B0"
+    # categories = [f'0{degree_symbol}', f'10{degree_symbol}', f'20{degree_symbol}', f'30{degree_symbol}', f'40{degree_symbol}']
+    # values1 = np.array(average_acc_sift)
+    # values2 = np.array(average_acc_orb)
     
-    x = np.arange(len(categories))  
-    width = 0.35 
+    # x = np.arange(len(categories))  
+    # width = 0.35 
 
-    fig, ax = plt.subplots()
-    rects1 = ax.bar(x - width/2, values1, width, label='Accuracy of SIFT match')
-    rects2 = ax.bar(x + width/2, values2, width, label='Accuracy of ORB match')
+    # fig, ax = plt.subplots()
+    # rects1 = ax.bar(x - width/2, values1, width, label='Accuracy of SIFT match')
+    # rects2 = ax.bar(x + width/2, values2, width, label='Accuracy of ORB match')
 
-    ax.set_ylabel('Average Accuracy')
-    ax.set_title('Biểu đồ so sánh Average Accuracy khi áp dụng thuật toán SIFT và ORB')
-    ax.set_xticks(x)
-    ax.set_xticklabels(categories)
-    ax.legend()
+    # ax.set_ylabel('Average Accuracy')
+    # ax.set_title('Biểu đồ so sánh Average Accuracy khi áp dụng thuật toán SIFT và ORB')
+    # ax.set_xticks(x)
+    # ax.set_xticklabels(categories)
+    # ax.legend()
 
-    c = st.columns([2, 6, 2])
-    c[1].pyplot(fig)
+    # c = st.columns([2, 6, 2])
+    # c[1].pyplot(fig)
 
 def get_image_with_100_percent():
     # lst_image = []
@@ -477,6 +703,7 @@ def get_image_with_100_percent():
     #     lst_label = pickle.load(file)
     lst_image, lst_label = get_image_and_label()
     lst_best_image = []
+    lst_best_label = []
     for i in range(len(lst_image)):
         for j in range(len(lst_image[i])):
             keypoints, _, _ = SIFT_result(lst_image[i][j])
@@ -490,7 +717,8 @@ def get_image_with_100_percent():
             recall_orb = calculate_recall(keypoints_ORB, lst_label[i][j], threshold=4)
             if (precision_sift == 1.0) or (precision_orb == 1.0) or (recall_sift == 1.0) or (recall_orb == 1.0):
                 lst_best_image.append(lst_image[i][j])
-    return lst_best_image
+                lst_best_label.append(lst_label[i][j])
+    return lst_best_image, lst_best_label
 
 def result_of_match():
     # lst_image = get_image_with_100_percent()
@@ -579,10 +807,11 @@ def Text_of_App():
     st.write("  -  **Draw checkerboard, Draw cube, Draw ellipses, Draw lines, Draw multiple polygon, Draw polygon, Draw star và Draw stripes**")
     st.write("  - Mỗi class có $500$ ảnh và tổng số ảnh trong dataset là $4000$ ảnh")
     st.write("**Một số ảnh trong Dataset và các keypoint tương ứng**")
-    path_dataset = './images/SIFT_SURF_ORB/dataset_with_keypoint.PNG'
-    image_dataset = cv.imread(path_dataset)
-    c = st.columns([2, 6, 2])
-    c[1].image(image_dataset,channels="BGR")
+    # path_dataset = './images/SIFT_SURF_ORB/dataset_with_keypoint.PNG'
+    plot_keypoint_groundtruth()
+    # image_dataset = cv.imread(path_dataset)
+    # c = st.columns([2, 6, 2])
+    # c[1].image(image_dataset,channels="BGR")
     st.header("2. Phương pháp")
     st.markdown("### 2.1 SIFT")
     
@@ -607,8 +836,7 @@ def Text_of_App():
         st.write("Dưới đây là hình ảnh minh họa thuật toán **SIFT**:")
         st.image('./images/SIFT_SURF_ORB/sift_algorith.png', channels="BGR", width=500)
     st.write("Duới đây là kết quả của một số ảnh khi áp dụng thuật toán **SIFT**")
-    c = st.columns([2, 6, 2])
-    c[1].image('./images/SIFT_SURF_ORB/result_of_SIFT.PNG', channels="BGR")
+    plot_sift()
 
     st.markdown("### 2.2 ORB")
     st.markdown("#### 2.2.1 Giới thiệu về thuật toán ORB")
@@ -630,19 +858,28 @@ def Text_of_App():
     with c[1]:
         st.write("Dưới đây là hình ảnh minh họa thuật toán ORB")
         st.image('./images/SIFT_SURF_ORB/achitecture_of_ORB.png', channels="BGR", width=480)
-    st.write("Duới đây là kết quả của một số ảnh khi áp dụng thuật toán **ORB**")
-    c = st.columns([2, 6, 2])
-    c[1].image('./images/SIFT_SURF_ORB/result_of_ORB.PNG', channels="BGR")
+    st.write("Dưới đây là kết quả của một số ảnh khi áp dụng thuật toán **ORB**")
+    plot_orb()
 
     st.header("3. Đánh giá")
     st.write("  - Tiến hành đánh giá trên 2 độ đo **Precision** và **Recall** khi áp dụng **SIFT và ORB**")
     c1, c2, c3 = st.columns([1, 8, 1])
     c2.image('./images/SIFT_SURF_ORB/precision_and_recall.png', channels="BGR", width=500)
-    st.markdown("   - **Keypoint** đó được cho là dự đoán đúng nếu khoảng cách **Euclidean** của **Keypoint** đó so với khoảng cách của **Keypoint** thực tế <= **Threshold**")
-    st.markdown("   - Công thức khoảng cách **Euclidean:**")
-    c = st.columns([2, 6, 2])
-    c[1].image('./images/SIFT_SURF_ORB/euclidean.png',channels="BGR", width=300)
-    st.markdown("   - **Threshold**: 4")
+    st.markdown(
+                """
+                - **Keypoint** đó được cho là dự đoán đúng nếu khoảng cách **Euclidean** của **Keypoint** đó so với khoảng cách của **Keypoint** thực tế <= **Threshold**
+                    - $d(groundtruth, predict) = \sqrt{(x_{groundtruth} - x_{predict}) ^ 2 + (y_{groundtruth} - y_{predict}) ^ 2}$
+                    - $d(groundtruth, predict)$ <= **Threshold**
+                    - **Trong đó:**
+                        - **Threshold** = $4$
+                        - **groundtruth** là **keypoint groundtruth**
+                        - **predict** là **keypoint predict**
+                """)
+    # st.markdown("   - Công thức khoảng cách **Euclidean:**")
+    # c = st.columns([2, 6, 2])
+    # c[1].image('./images/SIFT_SURF_ORB/euclidean.png',channels="BGR", width=300)
+    st.markdown("Dưới đây là một số ví dụ về các **Keypoints** được dự đoán đúng")
+    plot_true_keypoint()
     st.header("4. Kết quả")
     st.markdown("Dưới đây lần lượt là 2 biểu đồ so sánh **Precision** và **Recall** của Thuật toán **SIFT** và **ORB**")
     plot_metric()
@@ -651,12 +888,14 @@ def Text_of_App():
     st.write("  - **ORB** nhìn chung có **Precision** và **Recall** cao hơn cho các hình dạng có đặc trưng nổi bật, dễ phát hiện và phân biệt.")
     st.write("  - **SIFT** lại hoạt động tốt hơn trên các hình dạng có chi tiết đơn giản hoặc đều đặn, như **Lines** và **Stripes**.")
     st.markdown("**Nhận xét và giải thích:**")
-    st.write("  - **ORB** có độ chính xác và độ bao phủ tốt hơn cho một số hình dạng có đặc trưng phân biệt rõ ràng như **Checkerboard, Cube, Polygon**, và **Star**, do **ORB** tối ưu cho việc phát hiện đặc trưng nhanh "
+    st.write("  - **ORB** có độ chính xác và độ bao phủ tốt hơn cho một số hình dạng có đặc trưng phân biệt rõ ràng như **Checkerboard, Cube, Multiple polygons, Polygon**, và **Star**, do **ORB** tối ưu cho việc phát hiện đặc trưng nhanh "
              + "và ít chịu ảnh hưởng từ thay đổi góc xoay. Do đó **Precision** và **Recall** của **ORB** cao hơn **SIFT**")
+    example_conclusion_orb()
     st.write("  - **SIFT** hoạt động tốt hơn trên các hình dạng đơn giản, tuần hoàn như **Lines** và **Stripes** vì nó có cách tiếp cận chi tiết trong việc phát hiện đặc trưng, phù hợp với những chi tiết nhỏ của hình dạng này nên "
              + "**Precision** và **Recall** của **SIFT** cao hơn **ORB**")
-    st.write("  - **Ellipses** và **Multiple Polygons**: Cả hai thuật toán đều có **Precision** và **Recall** thấp cho các hình dạng này, do chúng có ít đặc trưng nổi bật hoặc quá phức tạp để các thuật toán này dễ dàng phát hiện.")
-
+    example_conclusion_sift()
+    st.write("  - **Ellipses**: Cả hai thuật toán đều có **Precision** và **Recall** thấp cho các hình dạng này, do chúng có ít đặc trưng nổi bật hoặc quá phức tạp để các thuật toán này dễ dàng phát hiện.")
+    example_conclusion_sift_and_orb()
 
 def Text_of_Superpoint_rotation():
     dg = "\u00B0"
@@ -704,4 +943,5 @@ def App():
         Text_of_App()
     with tab[1]:
         Text_of_Superpoint_rotation()
+        # extract_superpoint_keypoint_and_descriptor()
 App()
