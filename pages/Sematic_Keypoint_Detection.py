@@ -33,6 +33,7 @@ sift = cv.SIFT_create()
 
 orb = cv.ORB_create()
 
+
 def SIFT_result(image):
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     keypoints, descriptors = sift.detectAndCompute(gray, None)
