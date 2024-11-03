@@ -815,8 +815,8 @@ def result_of_match():
         # result_image_sift.append((image_sift, acc_sift))
         # result_image_orb.append((image_orb, acc_orb))
         # result_image_superpoint.append((image_superpoint, acc_superpoint))
-        c = st.columns([1, 3, 3, 3])
-        c[0].markdown(f"Rotation {angel[i]} {dg}")
+        c = st.columns([1.3, 3, 3, 3])
+        c[0].markdown(f"**Rotation** {angel[i]} {dg}")
         c[1].image(image_sift, caption=f"Accuracy = {acc_sift:.2f}")
         
         c[2].image(image_orb, caption=f"Accuracy = {acc_orb:.2f}")
@@ -851,7 +851,7 @@ def example_rotation_orb():
     c = st.columns([4, 2, 2])
     c[1].markdown("**ORB**")
     for i in range(len(angel)):
-        c = st.columns([3, 0.8, 3, 3])
+        c = st.columns([3, 1.2, 3, 3])
         image_2 = rotate_image(image_1, angel[i])
         image_orb, acc_orb = compare_and_draw_ORB_match(image_1, image_2, label)
         c[1].markdown(f"**Rotation {angel[i]} {dg}**")
@@ -885,7 +885,7 @@ def example_rotation_sift():
     c[1].markdown("**SIFT**")
     angel = [0, 10, 20, 30, 40]
     for i in range(len(angel)):
-        c = st.columns([3, 0.8, 3, 3])
+        c = st.columns([3, 1.2, 3, 3])
         # image_1 = lst_image[id]
         # label = lst_label[id]
         image_2 = rotate_image(image_1, angel[i])
@@ -922,7 +922,7 @@ def example_rotation_superpoint():
     c[1].markdown("**Superpoint**")
     angel = [0, 10, 20, 30, 40]
     for i in range(len(angel)):
-        c = st.columns([3, 0.8, 3, 3])
+        c = st.columns([3, 1.2, 3, 3])
         # image_1 = lst_image[id]
         # label = lst_label[id]
         image_2 = rotate_image(image_1, angel[i])
