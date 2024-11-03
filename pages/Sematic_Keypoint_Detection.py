@@ -464,6 +464,8 @@ def compare_and_draw_superpoint_match(image_1, image_2, label):
     image_gray = image_gray.astype('float32') / 255.0
     pts1, desc_1 = fe.get_descriptor_from_keypoints(image_gray, label)
     pts2, desc_2, _ = extract_superpoint_keypoint_and_descriptor(image_2)
+    if desc_2 is None:
+        return image_1, 0.0
     kp1 = convert_pts_to_keypoints(pts1)
     kp2 = convert_pts_to_keypoints(pts2)
     desc1 = desc_1.T
@@ -652,15 +654,14 @@ def plot_compare_match():
     
     # with open(file_label, 'wb') as file:
     #     pickle.dump(lst_label, file) 
-    lst_image = []
-    lst_label = []
-    with open(file_image, 'rb') as file:
-        lst_image = pickle.load(file)
+    # lst_image = []
+    # lst_label = []
+    # with open(file_image, 'rb') as file:
+    #     lst_image = pickle.load(file)
     
-    with open(file_label, 'rb') as file:
-        lst_label = pickle.load(file)
+    # with open(file_label, 'rb') as file:
+    #     lst_label = pickle.load(file)
     
-    print(len(lst_image))
     
     # rotate = [0, 10, 20, 30, 40]
     # lst_acc_sift = [[] for i in range(len(rotate))]
@@ -682,6 +683,7 @@ def plot_compare_match():
     #             lst_acc_orb[j].append(acc_orb)
     #             lst_acc_superpoint[j].append(acc_superpoint)
                 
+                
     # average_acc_sift = []
     # average_acc_orb = []
     # average_acc_superpoint = []
@@ -690,45 +692,45 @@ def plot_compare_match():
     #     average_acc_orb.append(sum(lst_acc_orb[i]) / len(lst_acc_orb[i]))
     #     average_acc_superpoint.append(sum(lst_acc_superpoint[i]) / len(lst_acc_superpoint[i]))
     # print(average_acc_sift[0], average_acc_orb[0], average_acc_superpoint[0])
-    # pickle_file_average_acc_sift = './data_processed/Semantic_Keypoint_Detection/avg_acc_sift.pkl'
+    pickle_file_average_acc_sift = './data_processed/Semantic_Keypoint_Detection/avg_acc_sift.pkl'
     # with open(pickle_file_average_acc_sift, 'wb') as file:
     #     pickle.dump(average_acc_sift, file)
     
-    # pickle_file_average_acc_orb = './data_processed/Semantic_Keypoint_Detection/avg_acc_orb.pkl'
+    pickle_file_average_acc_orb = './data_processed/Semantic_Keypoint_Detection/avg_acc_orb.pkl'
     # with open(pickle_file_average_acc_orb, 'wb') as file:
     #     pickle.dump(average_acc_orb, file)
         
-    # pickle_file_average_acc_superpoint = './data_processed/Semantic_Keypoint_Detection/avg_acc_superpoint.pkl'
+    pickle_file_average_acc_superpoint = './data_processed/Semantic_Keypoint_Detection/avg_acc_superpoint.pkl'
     # with open(pickle_file_average_acc_superpoint, 'wb') as file:
     #     pickle.dump(average_acc_superpoint, file)
     
-    # average_acc_sift = []
-    # average_acc_orb = []
-    # with open(pickle_file_average_acc_sift, 'rb') as file:
-    #     average_acc_sift = pickle.load(file)
+    average_acc_sift = []
+    average_acc_orb = []
+    average_acc_superpoint = []
+    with open(pickle_file_average_acc_sift, 'rb') as file:
+        average_acc_sift = pickle.load(file)
     
-    # with open(pickle_file_average_acc_orb, 'rb') as file:
-    #     average_acc_orb = pickle.load(file)
-    # degree_symbol = "\u00B0"
-    # categories = [f'0{degree_symbol}', f'10{degree_symbol}', f'20{degree_symbol}', f'30{degree_symbol}', f'40{degree_symbol}']
-    # values1 = np.array(average_acc_sift)
-    # values2 = np.array(average_acc_orb)
+    with open(pickle_file_average_acc_orb, 'rb') as file:
+        average_acc_orb = pickle.load(file)
+        
+    with open(pickle_file_average_acc_superpoint, 'rb') as file:
+        average_acc_superpoint = pickle.load(file)
+    degree_symbol = "\u00B0"
+    categories = [f'0{degree_symbol}', f'10{degree_symbol}', f'20{degree_symbol}', f'30{degree_symbol}', f'40{degree_symbol}']
+    values1 = np.array(average_acc_sift)
+    values2 = np.array(average_acc_orb)
+    values3 = np.array(average_acc_superpoint)
     
-    # x = np.arange(len(categories))  
-    # width = 0.35 
+    data = {
+            'Rotation': categories,
+            'SIFT': values1,
+            'ORB': values2,
+            'Superpoint': values3
+        }
 
-    # fig, ax = plt.subplots()
-    # rects1 = ax.bar(x - width/2, values1, width, label='Accuracy of SIFT match')
-    # rects2 = ax.bar(x + width/2, values2, width, label='Accuracy of ORB match')
-
-    # ax.set_ylabel('Average Accuracy')
-    # ax.set_title('Biểu đồ so sánh Average Accuracy khi áp dụng thuật toán SIFT và ORB')
-    # ax.set_xticks(x)
-    # ax.set_xticklabels(categories)
-    # ax.legend()
-
-    # c = st.columns([2, 6, 2])
-    # c[1].pyplot(fig)
+    df = pd.DataFrame(data)
+    st.bar_chart(df, x = "Rotation", stack = False, horizontal=True, color = ["#19c9fe", "#fcc200", "#de0033"])
+    
 
 def get_image_with_100_percent():
     lst_image, lst_label = get_image_and_label()
@@ -765,9 +767,9 @@ def get_image_with_100_percent():
 
 def result_of_match():
     # lst_image, lst_label, lst_id = get_image_with_100_percent()
-    file_image = 'D:\\OpenCV\\lst_image.pkl'
-    file_label = 'D:\\OpenCV\\lst_label.pkl'
-    file_id = 'D:\\OpenCV\\lst_id.pkl'
+    # file_image = 'D:\\OpenCV\\lst_image.pkl'
+    # file_label = 'D:\\OpenCV\\lst_label.pkl'
+    # file_id = 'D:\\OpenCV\\lst_id.pkl'
     # with open(file_image, 'wb') as file:
     #     pickle.dump(lst_image, file)   
     
@@ -821,8 +823,112 @@ def result_of_match():
 
         c[3].image(image_superpoint, caption=f"Accuracy = {acc_superpoint:.2f}")
     
-   
+def example_rotation_orb():
+    # file_image = 'D:\\OpenCV\\lst_image.pkl'
+    # file_label = 'D:\\OpenCV\\lst_label.pkl'
+    # file_id = 'D:\\OpenCV\\lst_id.pkl'
+    
+    # lst_image = []
+    # lst_label = []
+    # with open(file_image, 'rb') as file:
+    #     lst_image = pickle.load(file)
+    
+    # with open(file_label, 'rb') as file:
+    #     lst_label = pickle.load(file)
+    
+    # with open(file_id, 'rb') as file:
+    #     lst_id = pickle.load(file)
+    
+    image_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_cube/images/250.png'
+    label_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_cube/points/250.npy'
+    
+    image_1 = cv.imread(image_path)
+    label = np.load(label_path) 
+    dg = "\u00B0"
+    id = 210
+    # print(lst_id[id])
+    angel = [0, 10, 20, 30, 40]
+    c = st.columns([4, 2, 2])
+    c[1].markdown("**ORB**")
+    for i in range(len(angel)):
+        c = st.columns([3, 0.8, 3, 3])
+        image_2 = rotate_image(image_1, angel[i])
+        image_orb, acc_orb = compare_and_draw_ORB_match(image_1, image_2, label)
+        c[1].markdown(f"**Rotation {angel[i]} {dg}**")
+        c[2].image(image_orb, caption=f"Accuracy = {acc_orb:.2f}")
 
+def example_rotation_sift():
+    # file_image = 'D:\\OpenCV\\lst_image.pkl'
+    # file_label = 'D:\\OpenCV\\lst_label.pkl'
+    # file_id = 'D:\\OpenCV\\lst_id.pkl'
+    
+    # lst_image = []
+    # lst_label = []
+    # with open(file_image, 'rb') as file:
+    #     lst_image = pickle.load(file)
+    
+    # with open(file_label, 'rb') as file:
+    #     lst_label = pickle.load(file)
+    
+    # with open(file_id, 'rb') as file:
+    #     lst_id = pickle.load(file)
+    
+    image_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_checkerboard/images/255.png'
+    label_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_checkerboard/points/255.npy'
+    
+    image_1 = cv.imread(image_path)
+    label = np.load(label_path) 
+    dg = "\u00B0"
+    id = 20
+    # print(lst_id[id])
+    c = st.columns([4, 2, 2])
+    c[1].markdown("**SIFT**")
+    angel = [0, 10, 20, 30, 40]
+    for i in range(len(angel)):
+        c = st.columns([3, 0.8, 3, 3])
+        # image_1 = lst_image[id]
+        # label = lst_label[id]
+        image_2 = rotate_image(image_1, angel[i])
+        image_sift, acc_sift = compare_and_draw_sift_match(image_1, image_2, label)
+        c[1].markdown(f"**Rotation {angel[i]} {dg}**")
+        c[2].image(image_sift, caption=f"Accuracy = {acc_sift}")
+    
+def example_rotation_superpoint():
+    # file_image = 'D:\\OpenCV\\lst_image.pkl'
+    # file_label = 'D:\\OpenCV\\lst_label.pkl'
+    # file_id = 'D:\\OpenCV\\lst_id.pkl'
+    
+    # lst_image = []
+    # lst_label = []
+    # with open(file_image, 'rb') as file:
+    #     lst_image = pickle.load(file)
+    
+    # with open(file_label, 'rb') as file:
+    #     lst_label = pickle.load(file)
+    
+    # with open(file_id, 'rb') as file:
+    #     lst_id = pickle.load(file)
+    
+    image_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_cube/images/50.png'
+    label_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_cube/points/50.npy'
+    
+    image_1 = cv.imread(image_path)
+    label = np.load(label_path) 
+    
+    dg = "\u00B0"
+    id = 80
+    # print(lst_id[id])
+    c = st.columns([4, 2, 2])
+    c[1].markdown("**Superpoint**")
+    angel = [0, 10, 20, 30, 40]
+    for i in range(len(angel)):
+        c = st.columns([3, 0.8, 3, 3])
+        # image_1 = lst_image[id]
+        # label = lst_label[id]
+        image_2 = rotate_image(image_1, angel[i])
+        image_superpoint, acc_superpoint = compare_and_draw_superpoint_match(image_1, image_2, label)
+        c[1].markdown(f"**Rotation {angel[i]} {dg}**")
+        c[2].image(image_superpoint, caption=f"Accuracy = {acc_superpoint}")
 def Text_of_App():
     st.header("1. Giới thiệu Synthetic shapes datasets")
     st.write("Dataset **Synthetic shapes datasets** gồm $8$ class ảnh về hình học bao gồm ảnh và tọa độ các keypoint của từng ảnh như:")
@@ -929,26 +1035,35 @@ def Text_of_Superpoint_rotation():
                 """)
     c = st.columns([2, 6, 2])
     c[1].image('./images/SIFT_SURF_ORB/accuracy.png', channels="BGR", width=400)
-    
+    st.markdown("""
+                    - **Accuracy** được xác định bằng tỉ lệ giữa số **keypoint** được match đúng (của ảnh xoay **0°** và
+                    ảnh xoay **0°, hoặc 10° ... hoặc 40°**) và số **keypoint** được phát hiện ở ảnh xoay **0°**.
+                """)
     st.header("2. Kết quả")
     st.write(f" - Dưới đây là một số hình ảnh **matching keypoints** của 2 hình ảnh khi 1 ảnh giữ nguyên và 1 ảnh xoay một góc **0{dg}, 10{dg}, 20{dg}, 30{dg}, 40{dg}** của thuật toán **SIFT, ORB** và **Superpoint**")
     result_of_match()
-    st.write("  - Duới đây là biểu đồ biểu diễn **Average Accuracy** của khi áp dụng thuật toán **SIFT** và **ORB**")
+    st.write("  - Duới đây là biểu đồ biểu diễn **Average Accuracy** khi áp dụng thuật toán **SIFT, ORB** và Superpoint")
     plot_compare_match()
     st.header("3. Thảo luận")
     st.markdown("#### 3.1 Nhận xét")
-    st.write("  - Độ chính xác của cả hai thuật toán giảm đáng kể khi góc quay tăng.")
-    st.write("  - **SIFT**: Mặc dù giảm nhưng vẫn giữ được độ chính xác cao hơn **ORB** trong tất cả các góc quay.")
-    st.write("  - **ORB**: Độ chính xác giảm nhanh hơn so với **SIFT** khi góc quay tăng, thể hiện rằng **ORB** có thể nhạy cảm hơn với các góc quay lớn.")
-    st.markdown("#### 3.2 Giải thích")
-    st.markdown("""
-                - **SIFT** có khả năng chịu được sự thay đổi góc quay tốt hơn ORB, điều này có thể do **SIFT** không chỉ dựa vào các đặc trưng về cường độ 
-                mà còn sử dụng **gradient** hướng để xác định **keypoint**, từ đó giúp duy trì độ ổn định khi có sự thay đổi góc quay.
-                """)
-    st.markdown("""
-                - **ORB** có xu hướng kém ổn định hơn khi có sự thay đổi về góc quay, điều này làm giảm độ chính xác của nó nhanh hơn so với **SIFT**.
+    st.markdown(
                 """
-                )
+                - **ORB**: Độ chính xác của ORB duy trì ở mức cao và ổn định ở tất cả các góc quay từ 0° đến 40°. **ORB** có vẻ ít bị ảnh hưởng bởi sự thay đổi góc quay.
+                """)
+    example_rotation_orb()
+    st.markdown(
+                """
+                - **SIFT**: Độ chính xác của **SIFT** cũng khá ổn định, nhưng giảm dần khi góc quay tăng. Ở góc quay 40°, độ chính xác của **SIFT** giảm mạnh hơn so với **ORB**, 
+                cho thấy thuật toán này không duy trì hiệu suất cao khi góc quay lớn.
+                """)
+    example_rotation_sift()
+    st.markdown(
+                """
+                - **Superpoint**: Trong khi **Superpoint** ban đầu có độ chính xác thấp hơn **ORB** và **SIFT** ở các góc nhỏ (0° - 10°), nó lại có xu hướng tăng lên khi góc quay 
+                lớn hơn. Đặc biệt ở góc 40°, **Superpoint** có độ chính xác cao nhất, vượt qua cả **ORB** và **SIFT**, cho thấy thuật toán này có khả năng chịu đựng sự thay đổi góc quay tốt hơn ở các góc lớn.
+                """)
+    example_rotation_superpoint()
+    
 def App():
     tab = st.tabs(["**Sematic Keypoint Detection**", "**Superpoint - Rotation**"])
     with tab[0]:
