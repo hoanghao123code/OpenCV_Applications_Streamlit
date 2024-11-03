@@ -321,6 +321,8 @@ def extract_superpoint_keypoint_and_descriptor(img):
     # keypoints = [cv.KeyPoint(p[0], p[1], 1) for p in keypoints]
     return pts, desc, heatmap
 
+
+
 def convert_pts_to_keypoints(pts):
     keypoints = []
     for i in range(pts.shape[1]):
