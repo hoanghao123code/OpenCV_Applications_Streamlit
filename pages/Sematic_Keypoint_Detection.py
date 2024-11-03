@@ -891,7 +891,7 @@ def example_rotation_sift():
         image_2 = rotate_image(image_1, angel[i])
         image_sift, acc_sift = compare_and_draw_sift_match(image_1, image_2, label)
         c[1].markdown(f"**Rotation {angel[i]} {dg}**")
-        c[2].image(image_sift, caption=f"Accuracy = {acc_sift}")
+        c[2].image(image_sift, caption=f"Accuracy = {acc_sift:.2f}")
     
 def example_rotation_superpoint():
     # file_image = 'D:\\OpenCV\\lst_image.pkl'
@@ -928,7 +928,7 @@ def example_rotation_superpoint():
         image_2 = rotate_image(image_1, angel[i])
         image_superpoint, acc_superpoint = compare_and_draw_superpoint_match(image_1, image_2, label)
         c[1].markdown(f"**Rotation {angel[i]} {dg}**")
-        c[2].image(image_superpoint, caption=f"Accuracy = {acc_superpoint}")
+        c[2].image(image_superpoint, caption=f"Accuracy = {acc_superpoint:.2f}")
 def Text_of_App():
     st.header("1. Giới thiệu Synthetic shapes datasets")
     st.write("Dataset **Synthetic shapes datasets** gồm $8$ class ảnh về hình học bao gồm ảnh và tọa độ các keypoint của từng ảnh như:")
