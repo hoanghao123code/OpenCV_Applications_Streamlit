@@ -68,7 +68,7 @@ def load_image_dataset(path):
     return lst_image, lst_label
 
 
-def calculate_precision(predicted_keypoints, groundtruth_keypoints, threshold=4):
+def calculate_precision(predicted_keypoints, groundtruth_keypoints, desc_predict, threshold=4):
     true_positive = 0
     predicted_points  = np.array([kp.pt for kp in predicted_keypoints])
     groundtruth_points = np.array(groundtruth_keypoints)
@@ -92,7 +92,7 @@ def calculate_precision(predicted_keypoints, groundtruth_keypoints, threshold=4)
     
     return precision
 
-def calculate_recall(predicted_keypoints, groundtruth_keypoints, threshold=4):
+def calculate_recall(predicted_keypoints, groundtruth_keypoints, desc_predict, threshold=4):
     true_positive = 0
     predicted_points  = np.array([kp.pt for kp in predicted_keypoints])
     groundtruth_points = np.array(groundtruth_keypoints)
@@ -424,7 +424,6 @@ def compare_and_draw_sift_match(image_1, image_2, label):
     if sift_m_kp1 is None and sift_m_kp2 is None and sift_matches is None:
         return image_1, 0.0
     if len(sift_m_kp1) < 4 or len(sift_m_kp2) < 4:
-        # print(type(sift_m_kp1))
         return image_1, 0.0
     sift_H, sift_inliers = compute_homography(sift_m_kp1, sift_m_kp2)
     # Draw sift feature
@@ -437,7 +436,7 @@ def compare_and_draw_sift_match(image_1, image_2, label):
     return sift_matched_img, accuracy
     
 def compare_and_draw_ORB_match(image_1, image_2, label):
-    kp1, desc1 = extract_SIFT_keypoints_and_descriptors(image_1)
+    kp1, desc1 = extract_ORB_keypoints_and_descriptors(image_1)
     sift_kp1, sift_desc1 = filter_keypoints_and_descriptors(label, kp1, desc1)
     sift_kp2, sift_desc2 = extract_SIFT_keypoints_and_descriptors(image_2)
     sift_kp2, sift_desc2 = extract_ORB_keypoints_and_descriptors(image_2)
@@ -511,6 +510,7 @@ def draw_true_keypoint(image, label, type):
         y = int(kp[1])
         cv.circle(image, (x, y), radius=4, color= (0, 255, 0), thickness=2)
     return image
+
 
 def plot_true_keypoint():
     path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
@@ -641,32 +641,65 @@ def example_conclusion_sift_and_orb():
         c[1].image(draw_image_orb, caption="Keypoints of ORB")
 
 def plot_compare_match():
-    # lst_image, lst_label = get_image_with_100_percent()
+    # lst_image, lst_label, _ = get_image_with_100_percent()
+    
+    file_image = 'D:\\OpenCV\\lst_image.pkl'
+    file_label = 'D:\\OpenCV\\lst_label.pkl'
+    # with open(file_image, 'wb') as file:
+    #     pickle.dump(lst_image, file)   
+    
+    # with open(file_label, 'wb') as file:
+    #     pickle.dump(lst_label, file) 
+    lst_image = []
+    lst_label = []
+    with open(file_image, 'rb') as file:
+        lst_image = pickle.load(file)
+    
+    with open(file_label, 'rb') as file:
+        lst_label = pickle.load(file)
+    
+    print(len(lst_image))
+    
     # rotate = [0, 10, 20, 30, 40]
     # lst_acc_sift = [[] for i in range(len(rotate))]
     # lst_acc_orb = [[] for i in range(len(rotate))]
+    # lst_acc_superpoint = [[] for i in range(len(rotate))]
     # for i in range(len(lst_image)):
     #     for j in range(len(rotate)):    
     #         image_1 = lst_image[i]
     #         image_2 = rotate_image(image_1, rotate[j])
-    #         image_sift, acc_sift = compare_and_draw_sift_match(image_1, image_2)
-    #         image_orb, acc_orb = compare_and_draw_ORB_match(image_1, image_2)
-    #         if acc_sift != 0.0 and acc_orb != 0.0:
+            
+    #         image_sift, acc_sift = compare_and_draw_sift_match(image_1, image_2, lst_label[i])
+            
+    #         image_orb, acc_orb = compare_and_draw_ORB_match(image_1, image_2, lst_label[i])
+            
+    #         image_superpoint, acc_superpoint = compare_and_draw_superpoint_match(image_1, image_2, lst_label[i])
+            
+    #         if acc_sift != 0.0 and acc_orb != 0.0 and acc_superpoint != 0.0:
     #             lst_acc_sift[j].append(acc_sift)
     #             lst_acc_orb[j].append(acc_orb)
+    #             lst_acc_superpoint[j].append(acc_superpoint)
+                
     # average_acc_sift = []
     # average_acc_orb = []
+    # average_acc_superpoint = []
     # for i in range(len(rotate)):
     #     average_acc_sift.append(sum(lst_acc_sift[i]) / len(lst_acc_sift[i]))
     #     average_acc_orb.append(sum(lst_acc_orb[i]) / len(lst_acc_orb[i]))
-    # # print(average_acc_sift[0], average_acc_orb[0])
-    pickle_file_average_acc_sift = './data_processed/Semantic_Keypoint_Detection/avg_acc_sift.pkl'
+    #     average_acc_superpoint.append(sum(lst_acc_superpoint[i]) / len(lst_acc_superpoint[i]))
+    # print(average_acc_sift[0], average_acc_orb[0], average_acc_superpoint[0])
+    # pickle_file_average_acc_sift = './data_processed/Semantic_Keypoint_Detection/avg_acc_sift.pkl'
     # with open(pickle_file_average_acc_sift, 'wb') as file:
     #     pickle.dump(average_acc_sift, file)
     
-    pickle_file_average_acc_orb = './data_processed/Semantic_Keypoint_Detection/avg_acc_orb.pkl'
+    # pickle_file_average_acc_orb = './data_processed/Semantic_Keypoint_Detection/avg_acc_orb.pkl'
     # with open(pickle_file_average_acc_orb, 'wb') as file:
     #     pickle.dump(average_acc_orb, file)
+        
+    # pickle_file_average_acc_superpoint = './data_processed/Semantic_Keypoint_Detection/avg_acc_superpoint.pkl'
+    # with open(pickle_file_average_acc_superpoint, 'wb') as file:
+    #     pickle.dump(average_acc_superpoint, file)
+    
     # average_acc_sift = []
     # average_acc_orb = []
     # with open(pickle_file_average_acc_sift, 'rb') as file:
@@ -696,111 +729,97 @@ def plot_compare_match():
     # c[1].pyplot(fig)
 
 def get_image_with_100_percent():
-    # lst_image = []
-    # lst_label = []
-    # with open('./data_processed/Semantic_Keypoint_Detection/lst_image.pkl', 'rb') as file:
-    #     lst_image = pickle.load(file)
-    # with open('./data_processed/Semantic_Keypoint_Detection/lst_label.pkl', 'rb') as file:
-    #     lst_label = pickle.load(file)
     lst_image, lst_label = get_image_and_label()
     lst_best_image = []
     lst_best_label = []
+    lst_best_id = []
     for i in range(len(lst_image)):
         for j in range(len(lst_image[i])):
-            keypoints, _, _ = SIFT_result(lst_image[i][j])
+            keypoints_sift, desc_sift, _ = SIFT_result(lst_image[i][j])
             
-            keypoints_ORB, _, image = ORB_result(lst_image[i][j])
+            keypoints_orb, desc_orb, image = ORB_result(lst_image[i][j])
             
-            precision_sift = calculate_precision(keypoints, lst_label[i][j], threshold=4)
-            recall_sift = calculate_recall(keypoints, lst_label[i][j], threshold=4)
+            keypoints_superpoint, desc_superpoint, _ = extract_superpoint_keypoint_and_descriptor(lst_image[i][j])
+            keypoints_superpoint = convert_pts_to_keypoints(keypoints_superpoint)
             
-            precision_orb = calculate_precision(keypoints_ORB, lst_label[i][j], threshold=4)
-            recall_orb = calculate_recall(keypoints_ORB, lst_label[i][j], threshold=4)
-            if (precision_sift == 1.0) or (precision_orb == 1.0) or (recall_sift == 1.0) or (recall_orb == 1.0):
-                lst_best_image.append(lst_image[i][j])
-                lst_best_label.append(lst_label[i][j])
-    return lst_best_image, lst_best_label
+            image_process = lst_image[i][j]
+            label = lst_label[i][j]
+            if (len(label) == 0):
+                continue
+            # SIFT
+            kp1, desc1 = filter_keypoints_and_descriptors(label, keypoints_sift, desc_sift)
+            kp2, desc2 = filter_keypoints_and_descriptors(label, keypoints_orb, desc_orb)
+            kp3, desc3 = filter_keypoints_and_descriptors(label, keypoints_superpoint, desc_superpoint)
+            
+            acc_1 = len(kp1) / len(label)
+            acc_2 = len(kp2) / len(label)
+            acc_3 = len(kp3) / len(label)
+            
+            if (acc_1 == 1.0) or (acc_2 == 1.0) or (acc_3 == 1.0):  
+                lst_best_image.append(image_process)
+                lst_best_label.append(label)
+                lst_best_id.append((i, j))
+    return lst_best_image, lst_best_label, lst_best_id
 
 def result_of_match():
-    # lst_image = get_image_with_100_percent()
-    # pickle_image_100_percent = './data_processed/Semantic_Keypoint_Detection/image_100_percent.pkl'
-    # with open(pickle_image_100_percent, 'wb') as file:
-    #     pickle.dump(lst_image, file)
-    # angel = [0, 10, 20, 30, 40]
-    # result_image_sift = []
-    # result_image_orb = []
-    # for i in range(len(angel)):
-    #     image_1 = lst_image[2]
-    #     image_2 = rotate_image(image_1, angel[i])
-    #     image_sift, acc_sift = compare_and_draw_sift_match(image_1, image_2)
-    #     image_orb, acc_orb = compare_and_draw_ORB_match(image_1, image_2)
-    #     result_image_sift.append((image_sift, acc_sift))
-    #     result_image_orb.append((image_orb, acc_orb))
-    #     c[0].image(image_sift)
-    #     c[0].markdown(f"<div style='text-align: center;'><b>Accuracy = {acc_sift:.2f}</b></div>", unsafe_allow_html=True)
-        
-    #     c[1].image(image_orb)
-    #     c[1].markdown(f"<div style='text-align: center;'><b>Accuracy = {acc_orb:.2f}</b></div>", unsafe_allow_html=True)
-
-        
-    # for i in range(len(angel)):
-    #     image_1 = lst_image[861]
-    #     image_2 = rotate_image(image_1, angel[i])
-    #     image_sift, acc_sift = compare_and_draw_sift_match(image_1, image_2)
-    #     image_orb, acc_orb = compare_and_draw_ORB_match(image_1, image_2)
-    #     result_image_sift.append((image_sift, acc_sift))
-    #     result_image_orb.append((image_sift, acc_orb))
-    #     c[3].image(image_sift)
-    #     c[3].markdown(f"<div style='text-align: center;'><b>Accuracy = {acc_sift:.2f}</b></div>", unsafe_allow_html=True)
-        
-    #     c[4].image(image_orb)
-    #     c[4].markdown(f"<div style='text-align: center;'><b>Accuracy = {acc_orb:.2f}</b></div>", unsafe_allow_html=True)
-    pickle_sift_match_ex = './data_processed/Semantic_Keypoint_Detection/sift_match_example.pkl'
-    # with open(pickle_sift_match_ex, 'wb') as file:
-    #     pickle.dump(result_image_sift, file)   
+    # lst_image, lst_label, lst_id = get_image_with_100_percent()
+    file_image = 'D:\\OpenCV\\lst_image.pkl'
+    file_label = 'D:\\OpenCV\\lst_label.pkl'
+    file_id = 'D:\\OpenCV\\lst_id.pkl'
+    # with open(file_image, 'wb') as file:
+    #     pickle.dump(lst_image, file)   
     
-    pickle_orb_match_ex = './data_processed/Semantic_Keypoint_Detection/orb_match_example.pkl'
-    # with open(pickle_orb_match_ex, 'wb') as file:
-    #     pickle.dump(result_image_orb, file)  
+    # with open(file_label, 'wb') as file:
+    #     pickle.dump(lst_label, file) 
     
-    degree_symbol = "\u00B0"
+    # with open(file_id, 'wb') as file:
+    #     pickle.dump(lst_id, file) 
+    # lst_image = []
+    # lst_label = []
+    # with open(file_image, 'rb') as file:
+    #     lst_image = pickle.load(file)
+    
+    # with open(file_label, 'rb') as file:
+    #     lst_label = pickle.load(file)
+    
+    # with open(file_id, 'rb') as file:
+    #     lst_id = pickle.load(file)
+    
+    # print(len(lst_image))
+    # print(lst_id[8])
+    dg = "\u00B0"
     angel = [0, 10, 20, 30, 40]
     result_image_sift = []
     result_image_orb = []
-    with open(pickle_sift_match_ex, 'rb') as file:
-        result_image_sift = pickle.load(file)
-    with open(pickle_orb_match_ex, 'rb') as file:
-        result_image_orb = pickle.load(file)
-    n = len(angel)
-    for i in range(n):
-        c = st.columns([3, 3, 1, 3, 3])
-        image_1, acc_1 = result_image_sift[i]
-        image_3, acc_3 = result_image_sift[i + n]
+    result_image_superpoint = []
+    c = st.columns([3, 3, 3, 3])
+    c[1].markdown("**SIFT**")
+    c[2].markdown("**ORB**")
+    c[3].markdown("**Superpoint**")
+    image_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_checkerboard/images/28.png'
+    label_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_checkerboard/points/28.npy'
+    image = cv.imread(image_path)
+    label = np.load(label_path)
+    for i in range(len(angel)):
+        image_1 = image
+        image_2 = rotate_image(image_1, angel[i])
         
-        image_2, acc_2 = result_image_orb[i]
-        image_4, acc_4 = result_image_orb[i + n]
-        c[0].image(image_1)
-        c[0].markdown(f"<div style='text-align: center;'><b>Accuracy = {acc_1:.2f}</b></div>", unsafe_allow_html=True)
+        image_sift, acc_sift = compare_and_draw_sift_match(image_1, image_2, label)
+        image_orb, acc_orb = compare_and_draw_ORB_match(image_1, image_2, label)
+        image_superpoint, acc_superpoint = compare_and_draw_superpoint_match(image_1, image_2, label)
         
-        c[1].image(image_2)
-        c[1].markdown(f"<div style='text-align: center;'><b>Accuracy = {acc_2:.2f}</b></div>", unsafe_allow_html=True)
+        # result_image_sift.append((image_sift, acc_sift))
+        # result_image_orb.append((image_orb, acc_orb))
+        # result_image_superpoint.append((image_superpoint, acc_superpoint))
+        c = st.columns([1, 3, 3, 3])
+        c[0].markdown(f"Rotation {angel[i]} {dg}")
+        c[1].image(image_sift, caption=f"Accuracy = {acc_sift:.2f}")
+        
+        c[2].image(image_orb, caption=f"Accuracy = {acc_orb:.2f}")
 
-        c[2].markdown(
-            f"""
-            <div style='display: flex; align-items: center; justify-content: center; height: 100%; font-weight: bold;'>
-                {str(angel[i])} {degree_symbol}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        
-        c[3].image(image_3)
-        c[3].markdown(f"<div style='text-align: center;'><b>Accuracy = {acc_3:.2f}</b></div>", unsafe_allow_html=True)
-        
-        c[4].image(image_4)
-        c[4].markdown(f"<div style='text-align: center;'><b>Accuracy = {acc_4:.2f}</b></div>", unsafe_allow_html=True)
-        
-
+        c[3].image(image_superpoint, caption=f"Accuracy = {acc_superpoint:.2f}")
+    
+   
 
 def Text_of_App():
     st.header("1. Giới thiệu Synthetic shapes datasets")
@@ -808,11 +827,7 @@ def Text_of_App():
     st.write("  -  **Draw checkerboard, Draw cube, Draw ellipses, Draw lines, Draw multiple polygon, Draw polygon, Draw star và Draw stripes**")
     st.write("  - Mỗi class có $500$ ảnh và tổng số ảnh trong dataset là $4000$ ảnh")
     st.write("**Một số ảnh trong Dataset và các keypoint tương ứng**")
-    # path_dataset = './images/SIFT_SURF_ORB/dataset_with_keypoint.PNG'
     plot_keypoint_groundtruth()
-    # image_dataset = cv.imread(path_dataset)
-    # c = st.columns([2, 6, 2])
-    # c[1].image(image_dataset,channels="BGR")
     st.header("2. Phương pháp")
     st.markdown("### 2.1 SIFT")
     
@@ -902,25 +917,19 @@ def Text_of_Superpoint_rotation():
     dg = "\u00B0"
     st.header("1. Thiết lập thí nghiệm")
     st.markdown("""
-                - Tiến hành thí nghiệm đối với những ảnh trong tập **Synthetic Shapes Dataset** mà **SIFT** hoặc **ORB** đạt **100%** về phát hiện **Keypoints** (theo **Ground Truth**)
-                    - Số lượng ảnh tìm được: $1147$ ảnh 
+                - Tiến hành thí nghiệm đối với những ảnh trong tập **Synthetic Shapes Dataset** mà **SIFT, ORB** hoặc **Superpoint** đạt **100%** về phát hiện **Keypoints** (theo **Ground Truth**)
+                    - Số lượng ảnh tìm được: $1623$ ảnh 
                 """)
     
     st.markdown(f"""
-                - Thực hiện thí nghiệm đánh giá **SIFT, ORB** trên tiêu chí **rotation** (góc quay **0{dg}, 10{dg}, 20{dg}, 30{dg}, 40{dg}**) để đánh giá mức độ **matching keypoints** của 2 phương pháp trên tập dữ liệu vừa tìm được ở trên.
+                - Thực hiện thí nghiệm đánh giá **SIFT, ORB và Superpoint** trên tiêu chí **rotation** (góc quay **0{dg}, 10{dg}, 20{dg}, 30{dg}, 40{dg}**) để đánh giá mức độ **matching keypoints** của 3 phương pháp trên tập dữ liệu vừa tìm được ở trên.
                     - Sử dụng độ đo để đánh giá: **Accuracy**
                 """)
     c = st.columns([2, 6, 2])
     c[1].image('./images/SIFT_SURF_ORB/accuracy.png', channels="BGR", width=400)
     
     st.header("2. Kết quả")
-    st.write(f" - Dưới đây là một số hình ảnh **matching keypoints** của 2 hình ảnh khi 1 ảnh giữ nguyên và 1 ảnh xoay một góc **0{dg}, 10{dg}, 20{dg}, 30{dg}, 40{dg}** của thuật toán **SIFT** và **ORB**")
-    c = st.columns([3, 3, 1, 3, 3])
-    c[0].markdown(f"<div style='text-align: center;'><b>SIFT</b></div>", unsafe_allow_html=True)
-    c[1].markdown(f"<div style='text-align: center;'><b>ORB</b></div>", unsafe_allow_html=True)
-    c[2].markdown(f"<div style='text-align: center;'><b>Rotation</b></div>", unsafe_allow_html=True)
-    c[3].markdown(f"<div style='text-align: center;'><b>SIFT</b></div>", unsafe_allow_html=True)
-    c[4].markdown(f"<div style='text-align: center;'><b>ORB</b></div>", unsafe_allow_html=True)
+    st.write(f" - Dưới đây là một số hình ảnh **matching keypoints** của 2 hình ảnh khi 1 ảnh giữ nguyên và 1 ảnh xoay một góc **0{dg}, 10{dg}, 20{dg}, 30{dg}, 40{dg}** của thuật toán **SIFT, ORB** và **Superpoint**")
     result_of_match()
     st.write("  - Duới đây là biểu đồ biểu diễn **Average Accuracy** của khi áp dụng thuật toán **SIFT** và **ORB**")
     plot_compare_match()
