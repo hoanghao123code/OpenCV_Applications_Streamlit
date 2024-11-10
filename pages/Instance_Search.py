@@ -185,6 +185,7 @@ def Dataset_and_Process():
         c[i % 5].image(image, channels="BGR")
     st.header("2. Tìm kiếm ảnh")
     process()
+    
 def App():
     Dataset_and_Process()
 App()
