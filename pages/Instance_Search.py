@@ -174,7 +174,7 @@ def Dataset_and_Process():
     st.markdown(
                 """
                 - Dataset bao gồm $500$ ảnh đầu tiên của tập **val2017** của dataset **COCO**
-                bao gồm khoảng nhiều đối tượng khác nhau, từ người, động vật đến các đồ vật như xe cộ, thiết bị gia dụng
+                bao gồm nhiều đối tượng khác nhau, từ người, động vật đến các đồ vật như xe cộ, thiết bị gia dụng
                 """)
     path = "./images/Semantic_Keypoint_Detection/example_dataset_COCO/"
     lst_name = os.listdir(path)
