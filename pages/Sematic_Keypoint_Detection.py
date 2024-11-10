@@ -49,7 +49,7 @@ def ORB_result(image):
 
 
 def load_image_dataset(path):
-    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
     path_image = path_dataset + path + "/" + "images"
     path_label = path_dataset + path + "/" + "points"
     lst_all_image = os.listdir(path_image)
@@ -308,17 +308,9 @@ fe = SuperPointFrontend(weights_path = './services/semantic_keypoint_detection/s
                             cuda = False)
 
 def extract_superpoint_keypoint_and_descriptor(img):
-    
-    # if os.path.exists('./services/semantic_keypoint_detection/superpoint_v1.pth'):
-    #     print(1)
     img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     img_gray = img_gray.astype('float32')/255.0
-    
     pts, desc, heatmap = fe.run(img_gray)
-    # x_coords = pts[0, :]  
-    # y_coords = pts[1, :]
-    # keypoints = np.vstack((x_coords, y_coords)).T
-    # keypoints = [cv.KeyPoint(p[0], p[1], 1) for p in keypoints]
     return pts, desc, heatmap
 
 
@@ -335,7 +327,7 @@ def convert_pts_to_keypoints_gt(pts):
     keypoints = []
     for kp in pts:
         # Tạo cv2.KeyPoint từ tọa độ (x, y) trong pts
-        kp = cv.KeyPoint(x=kp[0], y = kp[1], size=1)
+        kp = cv.KeyPoint(x=kp[1], y = kp[0], size=1)
         keypoints.append(kp)
     return keypoints
 
@@ -417,9 +409,13 @@ def select_indice_keypoint(image, keypoints_gt, keypoints_sift, max_distance=4):
                 selected_indices.append(indices)
     return selected_indices, selected_keypoints_groundtruth
 
+def rotate_label(label):
+    kp = [[kpt[1], kpt[0]] for kpt in label]
+    return kp
 def compare_and_draw_sift_match(image_1, image_2, label):
     kp1, desc1 = extract_SIFT_keypoints_and_descriptors(image_1)
     sift_kp1, sift_desc1 = filter_keypoints_and_descriptors(label, kp1, desc1)
+    sift_kp1 = fill_all_keypoint(sift_kp1, label)
     sift_kp2, sift_desc2 = extract_SIFT_keypoints_and_descriptors(image_2)
     sift_m_kp1, sift_m_kp2, sift_matches = match_descriptors(
                 sift_kp1, sift_desc1, sift_kp2, sift_desc2)
@@ -433,13 +429,15 @@ def compare_and_draw_sift_match(image_1, image_2, label):
     sift_matched_img = cv.drawMatches(image_1, sift_kp1, image_2,
                                         sift_kp2, sift_matches, None,
                                         matchColor=(0, 255, 0),
-                                        singlePointColor=(0, 0, 255))
-    accuracy = len(sift_matches) / len(sift_kp1)
+                                        singlePointColor=(255, 0, 0))
+    accuracy = len(sift_matches) / len(label)
+    # sift_matched_img = draw_keypoint_matching(sift_matched_img, kp1, label)
     return sift_matched_img, accuracy
     
 def compare_and_draw_ORB_match(image_1, image_2, label):
     kp1, desc1 = extract_ORB_keypoints_and_descriptors(image_1)
     sift_kp1, sift_desc1 = filter_keypoints_and_descriptors(label, kp1, desc1)
+    sift_kp1 = fill_all_keypoint(sift_kp1, label)
     sift_kp2, sift_desc2 = extract_SIFT_keypoints_and_descriptors(image_2)
     sift_kp2, sift_desc2 = extract_ORB_keypoints_and_descriptors(image_2)
     sift_m_kp1, sift_m_kp2, sift_matches = match_descriptors(
@@ -454,8 +452,8 @@ def compare_and_draw_ORB_match(image_1, image_2, label):
     sift_matched_img = cv.drawMatches(image_1, sift_kp1, image_2,
                                            sift_kp2, sift_matches, None,
                                            matchColor=(0, 255, 0),
-                                           singlePointColor=(0, 0, 255))
-    accuracy = len(sift_matches) / len(sift_kp1)
+                                           singlePointColor=(255, 0, 0))
+    accuracy = len(sift_matches) / len(label)
     return sift_matched_img, accuracy
 
 def compare_and_draw_superpoint_match(image_1, image_2, label):
@@ -483,8 +481,8 @@ def compare_and_draw_superpoint_match(image_1, image_2, label):
     matches = np.array(matches)[inliers.astype(bool)].tolist()
     matched_img = cv.drawMatches(image_1, kp1, image_2, kp2, matches,
                                     None, matchColor=(0, 255, 0),
-                                    singlePointColor=(0, 0, 255))
-    accuracy = len(matches) / len(kp1)
+                                    singlePointColor=(255, 0, 0))
+    accuracy = len(matches) / len(label)
     return matched_img, accuracy
 
 def draw_true_keypoint(image, label, type):
@@ -505,7 +503,7 @@ def draw_true_keypoint(image, label, type):
         x = int(kp.pt[0])
         y = int(kp.pt[1])
         if i in id:
-            cv.circle(image, (x, y), radius=1, color=(0, 0, 255), thickness=2)
+            cv.circle(image, (x, y), radius=1, color=(239, 224, 21), thickness=2)
         else:
             cv.circle(image, (x, y), radius=1, color=(255, 0, 0), thickness=2)
         i += 1
@@ -517,7 +515,7 @@ def draw_true_keypoint(image, label, type):
 
 
 def plot_true_keypoint():
-    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
     path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
                         'draw_polygon', 'draw_star', 'draw_stripes']
     name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
@@ -533,7 +531,7 @@ def plot_true_keypoint():
     
 
 def plot_keypoint_groundtruth():
-    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
     path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
                         'draw_polygon', 'draw_star', 'draw_stripes']
     name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
@@ -549,10 +547,10 @@ def plot_keypoint_groundtruth():
 
 
 def plot_sift():
-    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
     path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
                         'draw_polygon', 'draw_star', 'draw_stripes']
-    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
+    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple polygons', 'polygon', 'star', 'stripes']
     lst_image = []
     c = st.columns(4)
     for i in range(8):
@@ -563,10 +561,10 @@ def plot_sift():
         c[i % 4].image(draw_image, caption=name[i])
 
 def plot_orb():
-    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
     path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
                         'draw_polygon', 'draw_star', 'draw_stripes']
-    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
+    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple polygons', 'polygon', 'star', 'stripes']
     lst_image = []
     c = st.columns(4)
     for i in range(8):
@@ -578,10 +576,10 @@ def plot_orb():
 
 
 def example_conclusion_sift():
-    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
     path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
                         'draw_polygon', 'draw_star', 'draw_stripes']
-    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
+    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple polygons', 'polygon', 'star', 'stripes']
     c = st.columns([2, 2, 2, 2])
     c[1].markdown("**Lines**")
     c[2].markdown("**Stripes**")
@@ -603,10 +601,10 @@ def example_conclusion_sift():
             c[2].image(draw_image_orb, caption="Keypoints of ORB")
 
 def example_conclusion_orb():
-    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
     path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
                         'draw_polygon', 'draw_star', 'draw_stripes']
-    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
+    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple polygons', 'polygon', 'star', 'stripes']
     c = st.columns([2, 2, 2, 2, 2])
     c[0].markdown("**Checkerboard**")
     c[1].markdown("**Cube**")
@@ -627,10 +625,10 @@ def example_conclusion_orb():
         c[id].image(draw_image_sift, caption="Keypoints of SIFT")
             
 def example_conclusion_sift_and_orb():
-    path_dataset = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/'
+    path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
     path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
                         'draw_polygon', 'draw_star', 'draw_stripes']
-    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple_polygons', 'polygon', 'star', 'stripes']
+    name = ['checkerboard', 'cube', 'ellipses', 'lines', 'multiple polygons', 'polygon', 'star', 'stripes']
     c = st.columns([4, 2, 4])
     c[1].markdown("**Ellipse**")
     for i in [2]:
@@ -645,8 +643,6 @@ def example_conclusion_sift_and_orb():
         c[1].image(draw_image_orb, caption="Keypoints of ORB")
 
 def plot_compare_match():
-    # lst_image, lst_label, _ = get_image_with_100_percent()
-    
     file_image = 'D:\\OpenCV\\lst_image.pkl'
     file_label = 'D:\\OpenCV\\lst_label.pkl'
     # with open(file_image, 'wb') as file:
@@ -692,21 +688,26 @@ def plot_compare_match():
     #     average_acc_orb.append(sum(lst_acc_orb[i]) / len(lst_acc_orb[i]))
     #     average_acc_superpoint.append(sum(lst_acc_superpoint[i]) / len(lst_acc_superpoint[i]))
     # print(average_acc_sift[0], average_acc_orb[0], average_acc_superpoint[0])
-    pickle_file_average_acc_sift = './data_processed/Semantic_Keypoint_Detection/avg_acc_sift.pkl'
+    # pickle_file_average_acc_sift = './data_processed/Semantic_Keypoint_Detection/avg_acc_sift.pkl'
     # with open(pickle_file_average_acc_sift, 'wb') as file:
     #     pickle.dump(average_acc_sift, file)
     
-    pickle_file_average_acc_orb = './data_processed/Semantic_Keypoint_Detection/avg_acc_orb.pkl'
+    # pickle_file_average_acc_orb = './data_processed/Semantic_Keypoint_Detection/avg_acc_orb.pkl'
     # with open(pickle_file_average_acc_orb, 'wb') as file:
     #     pickle.dump(average_acc_orb, file)
         
-    pickle_file_average_acc_superpoint = './data_processed/Semantic_Keypoint_Detection/avg_acc_superpoint.pkl'
+    # pickle_file_average_acc_superpoint = './data_processed/Semantic_Keypoint_Detection/avg_acc_superpoint.pkl'
     # with open(pickle_file_average_acc_superpoint, 'wb') as file:
     #     pickle.dump(average_acc_superpoint, file)
     
     average_acc_sift = []
     average_acc_orb = []
     average_acc_superpoint = []
+    
+    pickle_file_average_acc_sift = './data_processed/Semantic_Keypoint_Detection/avg_acc_sift.pkl'
+    pickle_file_average_acc_orb = './data_processed/Semantic_Keypoint_Detection/avg_acc_orb.pkl'
+    pickle_file_average_acc_superpoint = './data_processed/Semantic_Keypoint_Detection/avg_acc_superpoint.pkl'
+    
     with open(pickle_file_average_acc_sift, 'rb') as file:
         average_acc_sift = pickle.load(file)
     
@@ -765,6 +766,42 @@ def get_image_with_100_percent():
                 lst_best_id.append((i, j))
     return lst_best_image, lst_best_label, lst_best_id
 
+def get_descriptor_from_keypoints(image, keypoints):
+    gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    kp, desc = sift.compute(gray_image, keypoints)
+    return kp, desc
+
+def draw_keypoint_matching(image, keypoints, keypoints_gt, max_distance = 4):
+    for gt_keypoint in keypoints_gt:
+        
+        gt_pt = np.array([gt_keypoint[1], gt_keypoint[0]])
+        
+        distances = np.array([np.linalg.norm(np.array([kp.pt[0], kp.pt[1]]) - gt_pt) for kp in keypoints])
+        
+        valid_indices = np.where(distances <= max_distance)[0]
+        if len(valid_indices) == 0:
+            x = int(gt_keypoint[1])
+            y = int(gt_keypoint[0])
+            cv.circle(image, (x, y), radius = 3, color=(255, 0, 0), thickness = 1)
+    return image
+
+def fill_all_keypoint(keypoints, keypoints_gt, max_distance = 4):
+    kp_gt = []
+    for gt_keypoint in keypoints_gt:
+        
+        gt_pt = np.array([gt_keypoint[1], gt_keypoint[0]])
+        
+        distances = np.array([np.linalg.norm(np.array([kp.pt[0], kp.pt[1]]) - gt_pt) for kp in keypoints])
+        
+        valid_indices = np.where(distances <= max_distance)[0]
+        if len(valid_indices) == 0:
+            kp_gt.append(gt_keypoint)
+    kp_gt = convert_pts_to_keypoints_gt(kp_gt)
+    for kp in kp_gt:
+        keypoints.append(kp)
+    return keypoints
+
+
 def result_of_match():
     # lst_image, lst_label, lst_id = get_image_with_100_percent()
     # file_image = 'D:\\OpenCV\\lst_image.pkl'
@@ -796,12 +833,12 @@ def result_of_match():
     result_image_sift = []
     result_image_orb = []
     result_image_superpoint = []
-    c = st.columns([3, 3, 3, 3])
+    c = st.columns([3, 3, 2.8, 2.8])
     c[1].markdown("**SIFT**")
     c[2].markdown("**ORB**")
     c[3].markdown("**Superpoint**")
-    image_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_checkerboard/images/28.png'
-    label_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_checkerboard/points/28.npy'
+    image_path = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_checkerboard/images/35.png'
+    label_path = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_checkerboard/points/35.npy'
     image = cv.imread(image_path)
     label = np.load(label_path)
     for i in range(len(angel)):
@@ -816,7 +853,7 @@ def result_of_match():
         # result_image_orb.append((image_orb, acc_orb))
         # result_image_superpoint.append((image_superpoint, acc_superpoint))
         c = st.columns([1.3, 3, 3, 3])
-        c[0].markdown(f"**Rotation** {angel[i]} {dg}")
+        c[0].markdown(f"**Rotation {angel[i]} {dg}**")
         c[1].image(image_sift, caption=f"Accuracy = {acc_sift:.2f}")
         
         c[2].image(image_orb, caption=f"Accuracy = {acc_orb:.2f}")
@@ -839,8 +876,8 @@ def example_rotation_orb():
     # with open(file_id, 'rb') as file:
     #     lst_id = pickle.load(file)
     
-    image_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_cube/images/250.png'
-    label_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_cube/points/250.npy'
+    image_path = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_cube/images/259.png'
+    label_path = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_cube/points/259.npy'
     
     image_1 = cv.imread(image_path)
     label = np.load(label_path) 
@@ -873,8 +910,8 @@ def example_rotation_sift():
     # with open(file_id, 'rb') as file:
     #     lst_id = pickle.load(file)
     
-    image_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_checkerboard/images/255.png'
-    label_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_checkerboard/points/255.npy'
+    image_path = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_checkerboard/images/264.png'
+    label_path = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_checkerboard/points/264.npy'
     
     image_1 = cv.imread(image_path)
     label = np.load(label_path) 
@@ -909,8 +946,8 @@ def example_rotation_superpoint():
     # with open(file_id, 'rb') as file:
     #     lst_id = pickle.load(file)
     
-    image_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_cube/images/50.png'
-    label_path = './images/SIFT_SURF_ORB/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_cube/points/50.npy'
+    image_path = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_cube/images/50.png'
+    label_path = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/draw_cube/points/50.npy'
     
     image_1 = cv.imread(image_path)
     label = np.load(label_path) 
@@ -958,7 +995,7 @@ def Text_of_App():
                 """)
     with c[1]:
         st.write("Dưới đây là hình ảnh minh họa thuật toán **SIFT**:")
-        st.image('./images/SIFT_SURF_ORB/sift_algorith.png', channels="BGR", width=500)
+        st.image('./images/Semantic_Keypoint_Detection/sift_algorith.png', channels="BGR", width=500)
     st.write("Duới đây là kết quả của một số ảnh khi áp dụng thuật toán **SIFT**")
     plot_sift()
 
@@ -980,15 +1017,15 @@ def Text_of_App():
                 4. **So khớp:** Dùng khoảng cách Hamming để so khớp descriptor giữa các ảnh.
                 """)
     with c[1]:
-        st.write("Dưới đây là hình ảnh minh họa thuật toán ORB")
-        st.image('./images/SIFT_SURF_ORB/achitecture_of_ORB.png', channels="BGR", width=480)
+        st.write("Dưới đây là hình ảnh minh họa thuật toán **ORB**")
+        st.image('./images/Semantic_Keypoint_Detection/achitecture_of_ORB.png', channels="BGR", width=480)
     st.write("Dưới đây là kết quả của một số ảnh khi áp dụng thuật toán **ORB**")
     plot_orb()
 
     st.header("3. Đánh giá")
     st.write("  - Tiến hành đánh giá trên 2 độ đo **Precision** và **Recall** khi áp dụng **SIFT và ORB**")
     c1, c2, c3 = st.columns([1, 8, 1])
-    c2.image('./images/SIFT_SURF_ORB/precision_and_recall.png', channels="BGR", width=500)
+    c2.image('./images/Semantic_Keypoint_Detection/precision_and_recall.png', channels="BGR", width=500)
     st.markdown(
                 """
                 - **Keypoint** đó được cho là dự đoán đúng nếu khoảng cách **Euclidean** của **Keypoint** đó so với khoảng cách của **Keypoint** thực tế <= **Threshold**
@@ -999,9 +1036,6 @@ def Text_of_App():
                         - **groundtruth** là **keypoint groundtruth**
                         - **predict** là **keypoint predict**
                 """)
-    # st.markdown("   - Công thức khoảng cách **Euclidean:**")
-    # c = st.columns([2, 6, 2])
-    # c[1].image('./images/SIFT_SURF_ORB/euclidean.png',channels="BGR", width=300)
     st.markdown("Dưới đây là một số ví dụ về các **Keypoints** được dự đoán đúng")
     plot_true_keypoint()
     st.header("4. Kết quả")
@@ -1010,16 +1044,31 @@ def Text_of_App():
     st.header("5. Thảo luận")
     st.markdown("**Nhận xét tổng quan:**")
     st.write("  - **ORB** nhìn chung có **Precision** và **Recall** cao hơn cho các hình dạng có đặc trưng nổi bật, dễ phát hiện và phân biệt.")
-    st.write("  - **SIFT** lại hoạt động tốt hơn trên các hình dạng có chi tiết đơn giản hoặc đều đặn, như **Lines** và **Stripes**.")
+    st.write("  - **SIFT** lại hoạt động tốt hơn trên các hình dạng có chi tiết đơn giản hoặc đều đặn.")
     st.markdown("**Nhận xét và giải thích:**")
-    st.write("  - **ORB** có độ chính xác và độ bao phủ tốt hơn cho một số hình dạng có đặc trưng phân biệt rõ ràng như **Checkerboard, Cube, Multiple polygons, Polygon**, và **Star**, do **ORB** tối ưu cho việc phát hiện đặc trưng nhanh "
-             + "và ít chịu ảnh hưởng từ thay đổi góc xoay. Do đó **Precision** và **Recall** của **ORB** cao hơn **SIFT**")
+    st.write(
+            """
+            - **ORB** có độ chính xác và độ bao phủ tốt hơn cho một số hình dạng có đặc trưng phân biệt rõ ràng như **Checkerboard, Cube, Multiple polygons, Polygon**, và **Star**. Vì:
+                - **ORB** sử dụng thuật toán **FAST** để phát hiện **keypoints** một cách nhanh chóng và hiệu quả, và thuật toán này nhạy cảm với các đặc trưng góc cạnh mạnh, đặc biệt trên các hình dạng như 
+                **Checkerboard** và **Cube**. Các **keypoints** ở những khu vực có biên rõ ràng và nhiều góc dễ dàng được **ORB** nhận diện hơn.
+                - **ORB** cải thiện mô tả đặc trưng **BRIEF** để thích ứng với các thay đổi về góc quay, giúp nó nhận diện được các đặc trưng ở nhiều hướng khác nhau.
+                - **ORB** không chỉ phát hiện đặc trưng tốt mà còn có khả năng nhận diện lại các đặc trưng đó một cách nhất quán hơn, đặc biệt với những hình có mô hình lặp như **Checkerboard** hay **Multiple Polygons**.
+                Độ nhất quán này giúp **ORB** có cả độ chính xác và độ bao phủ cao.
+            """)
     example_conclusion_orb()
-    st.write("  - **SIFT** hoạt động tốt hơn trên các hình dạng đơn giản, tuần hoàn như **Lines** và **Stripes** vì nó có cách tiếp cận chi tiết trong việc phát hiện đặc trưng, phù hợp với những chi tiết nhỏ của hình dạng này nên "
-             + "**Precision** và **Recall** của **SIFT** cao hơn **ORB**")
+    st.write(
+            """
+            - **SIFT** hoạt động tốt hơn trên các hình dạng đơn giản, tuần hoàn như **Lines** và **Stripes**. Vì 
+                - **SIFT** sử dụng **Gaussian** để tạo ra một không gian tỷ lệ, giúp phát hiện **keypoints** ở nhiều mức độ chi tiết. Điều này cho phép **SIFT** tìm ra các **keypoints** đáng chú ý ngay cả trên những chi tiết nhỏ và mịn,
+                như các đường thẳng và sọc. Các hình dạng như **Lines** và **Stripes** thường có các đường biên mượt và không quá nổi bật, nhưng **SIFT** có thể phát hiện được chúng nhờ khả năng đa tỷ lệ của mình.
+                - Đặc trưng của **SIFT** được biểu diễn bằng các **vector gradient** mạnh mẽ và mô tả chính xác hơn, giúp nó nhận diện tốt các biên đơn giản nhưng đều đặn như ở hình **Lines** và **Stripes**. Những hình dạng này thường có sự tuần hoàn 
+                hoặc cấu trúc đều, và **vector gradient** của **SIFT** có thể mô tả tốt các đặc trưng này.
+                - **SIFT** dựa trên việc tính **gradient** cục bộ, rất phù hợp để phát hiện các thay đổi độ sáng trên các hình dạng đều đặn như **Lines** và **Stripes**. Sự thay đổi độ sáng liên tục nhưng đều đặn ở các vùng này tạo ra các **gradient** mà **SIFT** 
+                có thể dễ dàng phát hiện.
+                - Với các hình dạng đơn giản như **Lines** và **Stripes**, thường dễ gặp các vấn đề về nhiễu trong ảnh. **SIFT** được thiết kế để làm nổi bật các đặc trưng ổn định hơn, ít bị ảnh hưởng bởi nhiễu, nhờ vào bộ lọc **Gaussian** trong giai đoạn tiền xử lý.
+            """)
     example_conclusion_sift()
-    st.write("  - **Ellipses**: Cả hai thuật toán đều có **Precision** và **Recall** thấp cho các hình dạng này, do chúng có ít đặc trưng nổi bật hoặc quá phức tạp để các thuật toán này dễ dàng phát hiện.")
-    example_conclusion_sift_and_orb()
+    st.write("  - **Ellipses**: Cả hai thuật toán đều có **Precision** và **Recall** thấp cho hình dạng này vì hình dạng này không có **keypoints** để phát hiện.")
 
 def Text_of_Superpoint_rotation():
     dg = "\u00B0"
@@ -1034,7 +1083,7 @@ def Text_of_Superpoint_rotation():
                     - Sử dụng độ đo để đánh giá: **Accuracy**
                 """)
     c = st.columns([2, 6, 2])
-    c[1].image('./images/SIFT_SURF_ORB/accuracy.png', channels="BGR", width=400)
+    c[1].image('./images/Semantic_Keypoint_Detection/accuracy.png', channels="BGR")
     st.markdown("""
                     - **Accuracy** được xác định bằng tỉ lệ giữa số **keypoint** được match đúng (của ảnh xoay **0°** và
                     ảnh xoay **0°, hoặc 10° ... hoặc 40°**) và số **keypoint** được phát hiện ở ảnh xoay **0°**.
@@ -1042,30 +1091,43 @@ def Text_of_Superpoint_rotation():
     st.header("2. Kết quả")
     st.write(f" - Dưới đây là một số hình ảnh **matching keypoints** của 2 hình ảnh khi 1 ảnh giữ nguyên và 1 ảnh xoay một góc **0{dg}, 10{dg}, 20{dg}, 30{dg}, 40{dg}** của thuật toán **SIFT, ORB** và **Superpoint**")
     result_of_match()
-    st.write("  - Duới đây là biểu đồ biểu diễn **Average Accuracy** khi áp dụng thuật toán **SIFT, ORB** và Superpoint")
+    st.write("  - Duới đây là biểu đồ biểu diễn **Average Accuracy** khi áp dụng thuật toán **SIFT, ORB** và **Superpoint**")
     plot_compare_match()
     st.header("3. Thảo luận")
     st.markdown("#### 3.1 Nhận xét")
     st.markdown(
                 """
-                - **ORB**: Độ chính xác của ORB duy trì ở mức cao và ổn định ở tất cả các góc quay từ 0° đến 40°. **ORB** có vẻ ít bị ảnh hưởng bởi sự thay đổi góc quay.
+                - Độ chính xác của **ORB** tuy cao hơn **SIFT** nhưng độ chính xác có xu hướng giảm khi góc quay lớn. Vì:
+                    - **ORB** sử dụng thuật toán **FAST** để phát hiện **keypoints**, đây là một phương pháp rất nhanh nhưng 
+                    không nhạy với các biến đổi về tỷ lệ, dẫn đến việc **keypoints** có thể không ổn định khi ảnh thay đổi kích thước.
+                    - **ORB** sử dụng **descriptor nhị phân BRIEF**, với mỗi **descriptor** được tạo ra từ các phép so sánh cặp điểm pixel. 
+                    Dù cho phép tính toán nhanh nhưng **descriptor** này nhạy cảm với biến đổi về cường độ ánh sáng và ít chính xác hơn trong việc mô tả chi tiết.
+                    - **ORB** có thêm bước tính toán hướng để tối ưu hóa cho xoay, nhưng không có cơ chế nội tại để xử lý tốt các thay đổi về tỷ lệ và ánh sáng. 
+                    Điều này làm giảm độ chính xác của ORB trong các điều kiện biến đổi phức tạp.
                 """)
     example_rotation_orb()
     st.markdown(
                 """
-                - **SIFT**: Độ chính xác của **SIFT** cũng khá ổn định, nhưng giảm dần khi góc quay tăng. Ở góc quay 40°, độ chính xác của **SIFT** giảm mạnh hơn so với **ORB**, 
-                cho thấy thuật toán này không duy trì hiệu suất cao khi góc quay lớn.
+                - Độ chính xác của **SIFT** không cao nhưng không có nhiều biến động về độ chính xác khi góc quay thay đổi. Vì:
+                    - **SIFT** sử dụng cấu trúc không gian đa tỷ lệ **(scale-space)** với bộ lọc **Gaussian** để phát hiện các **keypoints**. Điều này giúp **SIFT** duy trì được các 
+                    **keypoints** ổn định bất kể ảnh có thay đổi về kích thước.
+                    - Mỗi **keypoint** của **SIFT** được mô tả bằng **vector đặc trưng** tính toán từ **histogram gradient**, nhờ đó **SIFT** có thể nắm bắt được cấu trúc cục bộ của điểm ảnh, giữ được 
+                    tính ổn định ngay cả khi ảnh bị xoay hoặc thay đổi độ sáng.
                 """)
     example_rotation_sift()
     st.markdown(
                 """
-                - **Superpoint**: Trong khi **Superpoint** ban đầu có độ chính xác thấp hơn **ORB** và **SIFT** ở các góc nhỏ (0° - 10°), nó lại có xu hướng tăng lên khi góc quay 
-                lớn hơn. Đặc biệt ở góc 40°, **Superpoint** có độ chính xác cao nhất, vượt qua cả **ORB** và **SIFT**, cho thấy thuật toán này có khả năng chịu đựng sự thay đổi góc quay tốt hơn ở các góc lớn.
+                - **SuperPoint** có độ chính xác cao nhất trong ba thuật toán, đặc biệt là khi hình ảnh có biến đổi về góc quay. Vì:
+                    - **SuperPoint** sử dụng mạng **nơ-ron tích chập (CNN)** để tự động học các đặc trưng từ dữ liệu, nhờ đó có khả năng phát hiện và mô tả **keypoints** một cách linh hoạt. 
+                    Điều này giúp **SuperPoint** có thể nhận diện các đặc trưng ổn định dù hình ảnh bị biến đổi phức tạp.
+                    - **SuperPoint** được huấn luyện với dữ liệu lớn chứa nhiều trường hợp biến đổi về góc, tỷ lệ và độ sáng, do đó có thể tổng quát hóa tốt hơn cho các điều kiện thực tế. Nhờ vậy, 
+                    **SuperPoint** đạt độ chính xác cao hơn khi so sánh với **SIFT** và **ORB**, nhất là trong các tình huống khó khăn.
+                    - **SuperPoint** tạo **descriptor** không chỉ dựa trên pixel, mà còn dựa vào các đặc trưng cấp cao của ảnh nhờ các tầng **CNN**. Điều này giúp **descriptor** của **SuperPoint** mạnh mẽ và chính xác hơn.
                 """)
     example_rotation_superpoint()
     
 def App():
-    tab = st.tabs(["**Sematic Keypoint Detection**", "**Superpoint - Rotation**"])
+    tab = st.tabs(["**Sematic Keypoint Detection**", "**Keypoint Matching**"])
     with tab[0]:
         Text_of_App()
     with tab[1]:
