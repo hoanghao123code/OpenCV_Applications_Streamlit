@@ -1,11 +1,5 @@
 import streamlit as st
-import firebase_admin
-import json, toml
-from firebase_admin import credentials
-from google.cloud import firestore, storage
 from PIL import Image, ImageOps
-from google.cloud.firestore import FieldFilter as fil
-from google.cloud.firestore_v1.vector import Vector
 from io import BytesIO
 
 import cv2 as cv
@@ -33,11 +27,6 @@ st.set_page_config(
 )
 st.title("🎈Instance Search App")
 
-# Khởi tạo Firestore Client bằng credentials từ file JSON
-db = firestore.Client.from_service_account_info(st.secrets)
-
-
-bucket = storage.Client.from_service_account_info(st.secrets).get_bucket('face-detection-2024.appspot.com')
 
 def match_descriptors(kp1, desc1, kp2, desc2):
     # Match the keypoints with the warped_keypoints with nearest neighbor search
@@ -166,7 +155,7 @@ def process():
             st.markdown("**Ảnh kết quả**")
             c = st.columns(5)
             for i in range(k):
-                c[i % 5].image(scale_image(results[i][1]), channels="BGR")
+                c[i % 5].image(scale_image(results[i][1]), channels="BGR", caption = f"Số lượng matching = {results[i][0]}")
         else:
             st.warning("Vui lòng chọn ảnh cần tìm kiếm!")
 def Dataset_and_Process():
@@ -183,7 +172,14 @@ def Dataset_and_Process():
         path_image = path + lst_name[i]
         image = cv.imread(path_image)
         c[i % 5].image(image, channels="BGR")
-    st.header("2. Tìm kiếm ảnh")
+    st.header("2. Phương pháp")
+    st.markdown("Mô tả thuật toán")
+    image_mt = cv.imread("./images/Semantic_Keypoint_Detection/method_instance_search.PNG")
+    st.image(image_mt, channels="BGR")
+    st.markdown("Dưới đây là một số hình ảnh minh hoạ kết quả truy vấn với **k = 5** được sắp xếp theo thứ tự giảm dần của số lượng matching")
+    image_ex = cv.imread("./images/Semantic_Keypoint_Detection/example_results_instance_search.PNG")
+    st.image(image_ex, channels="BGR")
+    st.header("3. Truy vấn ảnh")
     process()
     
 def App():

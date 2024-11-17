@@ -68,7 +68,7 @@ def load_image_dataset(path):
     return lst_image, lst_label
 
 
-def calculate_precision(predicted_keypoints, groundtruth_keypoints, desc_predict, threshold=4):
+def calculate_precision(predicted_keypoints, groundtruth_keypoints, threshold=4):
     true_positive = 0
     predicted_points  = np.array([kp.pt for kp in predicted_keypoints])
     groundtruth_points = np.array(groundtruth_keypoints)
@@ -92,7 +92,7 @@ def calculate_precision(predicted_keypoints, groundtruth_keypoints, desc_predict
     
     return precision
 
-def calculate_recall(predicted_keypoints, groundtruth_keypoints, desc_predict, threshold=4):
+def calculate_recall(predicted_keypoints, groundtruth_keypoints, threshold=4):
     true_positive = 0
     predicted_points  = np.array([kp.pt for kp in predicted_keypoints])
     groundtruth_points = np.array(groundtruth_keypoints)
@@ -514,7 +514,42 @@ def draw_true_keypoint(image, label, type):
     return image
 
 
+def draw_conclusion_keypoint(image, label, type):
+    keypoints = 0
+    desc = 0
+    # type = 1: sift, 2: orb, 3: superpoint
+    
+    if type == 1:
+        keypoints, desc = extract_SIFT_keypoints_and_descriptors(image)
+    elif type == 2:
+        keypoints, desc = extract_ORB_keypoints_and_descriptors(image)
+    else:
+        kp, desc = extract_superpoint_keypoint_and_descriptor(image)
+        keypoints = convert_pts_to_keypoints(kp)
+    id, pt_gt = select_indice_keypoint(image, label, keypoints)
+    i = 0
+    for kp in keypoints:
+        x = int(kp.pt[0])
+        y = int(kp.pt[1])
+        if i in id:
+            cv.circle(image, (x, y), radius=1, color=(239, 224, 21), thickness=2)
+        else:
+            cv.circle(image, (x, y), radius=1, color=(255, 0, 0), thickness=2)
+        i += 1
+    for kp in pt_gt:
+        x = int(kp[0])
+        y = int(kp[1])
+        cv.circle(image, (x, y), radius=4, color= (0, 255, 0), thickness=2)
+    return image, len(pt_gt)
+
 def plot_true_keypoint():
+    st.markdown(
+                """
+                - Trong đó:
+                    - **Vòng tròn màu xanh** là bán kính để xác định **keypoints** đúng.
+                    - **Vòng tròn màu đỏ** là những **keypoints** được phát hiện sai.
+                    - **Vòng tròn màu vàng** là những **keypoints** được phát hiện đúng.
+                """)
     path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
     path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
                         'draw_polygon', 'draw_star', 'draw_stripes']
@@ -575,6 +610,12 @@ def plot_orb():
         c[i % 4].image(draw_image, caption=name[i])
 
 
+def precision(TP, FP):
+    return TP / (TP + FP)
+
+def recall(TP, FN):
+    return TP / (TP + FN)
+
 def example_conclusion_sift():
     path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
     path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
@@ -583,22 +624,30 @@ def example_conclusion_sift():
     c = st.columns([2, 2, 2, 2])
     c[1].markdown("**Lines**")
     c[2].markdown("**Stripes**")
-    
+    pre = [1, 4/(4 + 55)]
+    re = [0.8, 1]
+    pre2 = [0.5, 0]
+    re2 = [1.0, 0]
+    num_1 = [8, 4]
+    num_2 = [2, 0]
     for i in [3, 7]:
         path_image = path_dataset + path[i] + "/" + "images/103.png"
         path_label = path_dataset + path[i] + "/" + "points/103.npy"
         image = cv.imread(path_image)
         label = np.load(path_label)
         image_cpy = image.copy()
-        draw_image_sift = draw_true_keypoint(image, label, 1)
-        draw_image_orb = draw_true_keypoint(image_cpy, label, 2)
+        draw_image_sift, num1 = draw_conclusion_keypoint(image, label, 1)
+        draw_image_orb, num2 = draw_conclusion_keypoint(image_cpy, label, 2)
+        
         if i == 3:
-            c[1].image(draw_image_sift, caption="Keypoints of SIFT")
-            c[1].image(draw_image_orb, caption="Keypoints of ORB")
+            kp, desc = extract_SIFT_keypoints_and_descriptors(image)
+            print(len(kp))
+            c[1].image(draw_image_sift, caption=f"Số lượng keypoints được phát hiện đúng = {num_1[0]}, Precision = {pre[0]:.2f}, Recall = {re[0]:.2f}")
+            c[1].image(draw_image_orb, caption=f"Số lượng keypoints được phát hiện đúng = {num_1[1]}, Precision = {pre[1]:.2f}, Recall = {re[1]:.2f}")
             
         else:
-            c[2].image(draw_image_sift, caption="Keypoints of SIFT")
-            c[2].image(draw_image_orb, caption="Keypoints of ORB")
+            c[2].image(draw_image_sift, caption=f"Số lượng keypoints được phát hiện đúng = {num_2[0]}, Precision = {pre2[0]:.2f}, Recall = {re2[0]:.2f}")
+            c[2].image(draw_image_orb, caption=f"Số lượng keypoints được phát hiện đúng = {num_2[1]}, Precision = {pre2[1]:.2f}, Recall = {re2[1]:.2f}")
 
 def example_conclusion_orb():
     path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
@@ -977,16 +1026,15 @@ def Text_of_App():
     st.markdown("### 2.1 SIFT")
     
     st.markdown("#### 2.1.1 Giới thiệu về thuật toán SIFT" )
-    st.write("Thuật toán **SIFT (Scale-Invariant Feature Transform)** phát hiện và mô tả các điểm đặc trưng **(keypoints)** trong ảnh một cách không thay đổi trước biến đổi tỷ lệ, góc quay, và cường độ ánh sáng")
-    st.write("Thuật toán **SIFT** được phát triển bởi **David Lowe**, và bài báo gốc mô tả **SIFT** là:")
-    st.write("  - **Lowe, David G. ""Distinctive image features from scale-invariant keypoints."" International Journal of Computer Vision, 2004.**")
+    st.write("Thuật toán [SIFT (Scale-Invariant Feature Transform)](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=cc58efc1f17e202a9c196f9df8afd4005d16042a) phát hiện và mô tả các điểm đặc trưng **(keypoints)** trong ảnh một cách không thay đổi trước biến đổi tỷ lệ, góc quay, và cường độ ánh sáng")
+    st.write("Thuật toán **SIFT** được phát triển bởi **David Lowe**, được công bố lần đầu ở bài báo [Distinctive Image Features from Scale-Invariant Keypoints](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=cc58efc1f17e202a9c196f9df8afd4005d16042a)")
     st.write(" Bài báo này được trích dẫn rộng rãi và là nền tảng cho nhiều ứng dụng và nghiên cứu về thị giác máy tính.")
     st.markdown("#### 2.1.2 Thuật toán SIFT")
     c = st.columns(2)
     with c[0]:
         st.markdown(
                 """
-                Các bước chính của thuật toán SIFT:
+                Các bước chính của thuật toán **SIFT**:
                 1. **Phát hiện điểm đặc trưng:** Sử dụng **Difference of Gaussian (DoG)** trên các phiên bản ảnh với nhiều mức tỷ lệ để tìm điểm cực trị.
                 2. **Lọc điểm yếu:** Loại bỏ các điểm không ổn định.
                 3. **Xác định hướng:** Tính toán góc gradient để đảm bảo không thay đổi đối với việc xoay ảnh.
@@ -1001,9 +1049,7 @@ def Text_of_App():
 
     st.markdown("### 2.2 ORB")
     st.markdown("#### 2.2.1 Giới thiệu về thuật toán ORB")
-    st.write("**ORB (Oriented FAST and Rotated BRIEF)** là thuật toán phát hiện và mô tả đặc trưng hình ảnh, "
-            + "được phát triển bởi các nhà nghiên cứu **Ethan Rublee, Vincent Rabaud, Kurt Konolige, và Gary R. Bradski** và được giới thiệu lần đầu tiên vào năm $2011$ trong bài báo sau:")
-    st.write("  - **Rublee, Ethan, et al. ""ORB: An efficient alternative to SIFT or SURF."" 2011 International Conference on Computer Vision (ICCV). IEEE, 2011.**")
+    st.write("Được giới thiệu lần đầu tiên vào năm $2011$ trong bài báo [Rublee, Ethan, et al. ORB: An efficient alternative to SIFT or SURF. 2011 International Conference on Computer Vision (ICCV). IEEE, 2011.](https://d1wqtxts1xzle7.cloudfront.net/90592905/145_s14_01-libre.pdf?1662172284=&response-content-disposition=inline%3B+filename%3DORB_An_efficient_alternative_to_SIFT_or.pdf&Expires=1731869319&Signature=WAC7SWCvhBpQUGF-MtmygAiJZDehoAsFALKrP4a1PfueoKTtIPLpgTjz1XpqVtYFt-uDS2ONQ04mMnPJW4oEy-f4VJaS3olXsvKHYD3yJaRQTGfEXjYAWvglHU~ZYA-5GroNSN~EAhk1MbL6TdlOFtvmP1eFB-rezS17HWYoupNMfzTjPzam1jzyUJlBSaFDBwk9VcOGDo~QuJ8vRXVOThMe1DdmQXARVi0Noiqb6bMfMoAzMVPZ7UEkHjxoJilGMTg1n4JAGULFzAU613z980vx9paJrB-tp1s00i9hcaxkHQz59QRqxqGFTj5EeVt-ztDvkZ-YpmBQ47JGY1fmVg__&Key-Pair-Id=APKAJLOHF5GGSLRBV4ZA)")
     st.write("**ORB** được thiết kế như một thuật toán phát hiện và mô tả đặc trưng nhanh và hiệu quả hơn, thay thế cho các thuật toán **SIFT** và **SURF**, với tính bất biến theo góc xoay và tỷ lệ.")
     st.markdown("#### 2.2.2 Thuật toán ORB")
     c = st.columns(2)
@@ -1036,36 +1082,32 @@ def Text_of_App():
                         - **groundtruth** là **keypoint groundtruth**
                         - **predict** là **keypoint predict**
                 """)
-    st.markdown("Dưới đây là một số ví dụ về các **Keypoints** được dự đoán đúng")
+    st.markdown("Dưới đây là một số ví dụ về các **Keypoints** được dự đoán đúng của thuật toán **SIFT**")
     plot_true_keypoint()
     st.header("4. Kết quả")
     st.markdown("Dưới đây lần lượt là 2 biểu đồ so sánh **Precision** và **Recall** của Thuật toán **SIFT** và **ORB**")
     plot_metric()
     st.header("5. Thảo luận")
     st.markdown("**Nhận xét tổng quan:**")
-    st.write("  - **ORB** nhìn chung có **Precision** và **Recall** cao hơn cho các hình dạng có đặc trưng nổi bật, dễ phát hiện và phân biệt.")
-    st.write("  - **SIFT** lại hoạt động tốt hơn trên các hình dạng có chi tiết đơn giản hoặc đều đặn.")
+    st.write("  - **ORB** nhìn chung có **Precision** và **Recall** cao hơn cho các hình dạng có đặc trưng nổi bật, dễ phát hiện và phân biệt như **Checkerboard, Cube, Multiple polygons, Polygon**, và **Star**.")
+    st.write("  - **SIFT** có **Precision** và **Recall** cao hơn trên các hình dạng có chi tiết đơn giản hoặc đều đặn như **Lines** và **Stripes**.")
     st.markdown("**Nhận xét và giải thích:**")
     st.write(
             """
-            - **ORB** có độ chính xác và độ bao phủ tốt hơn cho một số hình dạng có đặc trưng phân biệt rõ ràng như **Checkerboard, Cube, Multiple polygons, Polygon**, và **Star**. Vì:
-                - **ORB** sử dụng thuật toán **FAST** để phát hiện **keypoints** một cách nhanh chóng và hiệu quả, và thuật toán này nhạy cảm với các đặc trưng góc cạnh mạnh, đặc biệt trên các hình dạng như 
-                **Checkerboard** và **Cube**. Các **keypoints** ở những khu vực có biên rõ ràng và nhiều góc dễ dàng được **ORB** nhận diện hơn.
+            - **ORB** hoạt động tốt hơn trên các hình dạng như **Checkerboard, Cube, Multiple polygons, Polygon**, và **Star.** Vì:
+                - **ORB** sử dụng thuật toán **FAST** để phát hiện **keypoints** một cách nhanh chóng và hiệu quả, và thuật toán này nhạy cảm với các đặc trưng góc cạnh, đặc biệt trên các hình dạng như 
+                **Checkerboard, Cube, Polygons** và **Star**. Các **keypoints** ở những khu vực có biên rõ ràng và nhiều góc dễ dàng được **ORB** nhận diện hơn.
                 - **ORB** cải thiện mô tả đặc trưng **BRIEF** để thích ứng với các thay đổi về góc quay, giúp nó nhận diện được các đặc trưng ở nhiều hướng khác nhau.
-                - **ORB** không chỉ phát hiện đặc trưng tốt mà còn có khả năng nhận diện lại các đặc trưng đó một cách nhất quán hơn, đặc biệt với những hình có mô hình lặp như **Checkerboard** hay **Multiple Polygons**.
-                Độ nhất quán này giúp **ORB** có cả độ chính xác và độ bao phủ cao.
             """)
     example_conclusion_orb()
+
     st.write(
             """
-            - **SIFT** hoạt động tốt hơn trên các hình dạng đơn giản, tuần hoàn như **Lines** và **Stripes**. Vì 
+            - **SIFT** hoạt động tốt hơn trên các hình dạng đơn giản như **Lines** và **Stripes**. Vì:
                 - **SIFT** sử dụng **Gaussian** để tạo ra một không gian tỷ lệ, giúp phát hiện **keypoints** ở nhiều mức độ chi tiết. Điều này cho phép **SIFT** tìm ra các **keypoints** đáng chú ý ngay cả trên những chi tiết nhỏ và mịn,
-                như các đường thẳng và sọc. Các hình dạng như **Lines** và **Stripes** thường có các đường biên mượt và không quá nổi bật, nhưng **SIFT** có thể phát hiện được chúng nhờ khả năng đa tỷ lệ của mình.
+                như các đường thẳng và sọc. Các hình dạng như **Lines** và **Stripes** thường có các đường biên không quá nổi bật, nhưng **SIFT** có thể phát hiện được chúng nhờ khả năng đa tỷ lệ của mình.
                 - Đặc trưng của **SIFT** được biểu diễn bằng các **vector gradient** mạnh mẽ và mô tả chính xác hơn, giúp nó nhận diện tốt các biên đơn giản nhưng đều đặn như ở hình **Lines** và **Stripes**. Những hình dạng này thường có sự tuần hoàn 
                 hoặc cấu trúc đều, và **vector gradient** của **SIFT** có thể mô tả tốt các đặc trưng này.
-                - **SIFT** dựa trên việc tính **gradient** cục bộ, rất phù hợp để phát hiện các thay đổi độ sáng trên các hình dạng đều đặn như **Lines** và **Stripes**. Sự thay đổi độ sáng liên tục nhưng đều đặn ở các vùng này tạo ra các **gradient** mà **SIFT** 
-                có thể dễ dàng phát hiện.
-                - Với các hình dạng đơn giản như **Lines** và **Stripes**, thường dễ gặp các vấn đề về nhiễu trong ảnh. **SIFT** được thiết kế để làm nổi bật các đặc trưng ổn định hơn, ít bị ảnh hưởng bởi nhiễu, nhờ vào bộ lọc **Gaussian** trong giai đoạn tiền xử lý.
             """)
     example_conclusion_sift()
     st.write("  - **Ellipses**: Cả hai thuật toán đều có **Precision** và **Recall** thấp cho hình dạng này vì hình dạng này không có **keypoints** để phát hiện.")
