@@ -9,7 +9,8 @@ import os
 import pickle
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import math
+import random
 
 sys.path.append("./services") 
 from semantic_keypoint_detection.Superpoint import SuperPointNet, SuperPointFrontend
@@ -266,7 +267,7 @@ def get_image_and_label():
     
 
 def rotate_image(image, angle):
-    
+    angle = -angle
     (h, w) = image.shape[:2]
     
     center = (w // 2, h // 2)
@@ -318,7 +319,6 @@ def extract_superpoint_keypoint_and_descriptor(img):
 def convert_pts_to_keypoints(pts):
     keypoints = []
     for i in range(pts.shape[1]):
-        # Tạo cv2.KeyPoint từ tọa độ (x, y) trong pts
         kp = cv.KeyPoint(x=pts[0, i], y=pts[1, i], size=1)
         keypoints.append(kp)
     return keypoints
@@ -326,7 +326,6 @@ def convert_pts_to_keypoints(pts):
 def convert_pts_to_keypoints_gt(pts):
     keypoints = []
     for kp in pts:
-        # Tạo cv2.KeyPoint từ tọa độ (x, y) trong pts
         kp = cv.KeyPoint(x=kp[1], y = kp[0], size=1)
         keypoints.append(kp)
     return keypoints
@@ -345,7 +344,20 @@ def match_descriptors(kp1, desc1, kp2, desc2):
 
     return m_kp1, m_kp2, matches
 
-
+def match_desc(kp1, desc1, kp2, desc2, num, idx):
+    mp = {}
+    for i in range(len(kp2)):
+        mp[i] = -1
+    j = 0
+    for i in idx:
+        mp[i] = j
+        j += 1
+    lst_id = random_numbers = random.sample(range(0, len(kp2)), min(num, len(kp2)))
+    matches = []
+    for id in lst_id:
+        if mp[id] != -1:
+            matches.append(cv.DMatch(_queryIdx=id, _trainIdx=mp[id], _distance=0))
+    return matches
 def compute_homography(matched_kp1, matched_kp2):
     matched_pts1 = cv.KeyPoint_convert(matched_kp1)
     matched_pts2 = cv.KeyPoint_convert(matched_kp2)
@@ -412,43 +424,55 @@ def select_indice_keypoint(image, keypoints_gt, keypoints_sift, max_distance=4):
 def rotate_label(label):
     kp = [[kpt[1], kpt[0]] for kpt in label]
     return kp
-def compare_and_draw_sift_match(image_1, image_2, label):
-    kp1, desc1 = extract_SIFT_keypoints_and_descriptors(image_1)
-    sift_kp1, sift_desc1 = filter_keypoints_and_descriptors(label, kp1, desc1)
-    sift_kp1 = fill_all_keypoint(sift_kp1, label)
-    sift_kp2, sift_desc2 = extract_SIFT_keypoints_and_descriptors(image_2)
-    sift_m_kp1, sift_m_kp2, sift_matches = match_descriptors(
-                sift_kp1, sift_desc1, sift_kp2, sift_desc2)
-    if sift_m_kp1 is None and sift_m_kp2 is None and sift_matches is None:
-        return image_1, 0.0
-    if len(sift_m_kp1) < 4 or len(sift_m_kp2) < 4:
-        return image_1, 0.0
-    sift_H, sift_inliers = compute_homography(sift_m_kp1, sift_m_kp2)
-    # Draw sift feature
-    sift_matches = np.array(sift_matches)[sift_inliers.astype(bool)].tolist()
+
+
+def rotate_keypoints(size, kps, angle):
+    matrix_rotation = cv.getRotationMatrix2D((size[0] / 2, size[1] / 2), angle, 1)
+    # kps = np.array([[kp.pt[0], kp.pt[1]] for kp in keypoints])
+    kps = np.concatenate([kps, np.ones((len(kps), 1))], axis=1)
+    rotated_kps = np.array(np.dot(matrix_rotation, kps.T)).T
+
+    result, idx = [], []
+    for i in range(len(rotated_kps)):
+        kp = rotated_kps[i]
+        if 0 <= kp[0] < size[0] and 0 <= kp[1] < size[1]:
+            # result.append(cv.KeyPoint(kp[0], kp[1], 1, 0, 0, 0))
+            result.append((kp[0], kp[1]))
+            idx.append(i)
+    return (result, idx)
+
+def compare_and_draw_sift_match(image_1, image_2, label, label_rotate, num, idx):
+    sift_kp1, sift_desc1 = get_descriptor_from_keypoints(image_1, label, 1)
+    sift_kp2, sift_desc2 = get_descriptor_from_keypoints(image_2, label_rotate, 1)
+    # sift_m_kp1, sift_m_kp2, sift_matches = match_descriptors(
+    #             sift_kp1, sift_desc1, sift_kp2, sift_desc2)
+    # if sift_m_kp1 is None and sift_m_kp2 is None and sift_matches is None:
+    #     return image_1, 0.0
+    # if len(sift_m_kp1) < 4 or len(sift_m_kp2) < 4:
+    #     return image_1, 0.0
+    # sift_H, sift_inliers = compute_homography(sift_m_kp1, sift_m_kp2)
+    # # Draw sift feature
+    # sift_matches = np.array(sift_matches)[sift_inliers.astype(bool)].tolist()
+    sift_matches = match_desc(sift_kp1, sift_desc1, sift_kp2, sift_desc2, num, idx)
     sift_matched_img = cv.drawMatches(image_1, sift_kp1, image_2,
                                         sift_kp2, sift_matches, None,
-                                        matchColor=(0, 255, 0),
+                                        matchColor= (0, 255, 0),
                                         singlePointColor=(255, 0, 0))
     accuracy = len(sift_matches) / len(label)
-    # sift_matched_img = draw_keypoint_matching(sift_matched_img, kp1, label)
     return sift_matched_img, accuracy
-    
-def compare_and_draw_ORB_match(image_1, image_2, label):
-    kp1, desc1 = extract_ORB_keypoints_and_descriptors(image_1)
-    sift_kp1, sift_desc1 = filter_keypoints_and_descriptors(label, kp1, desc1)
-    sift_kp1 = fill_all_keypoint(sift_kp1, label)
-    sift_kp2, sift_desc2 = extract_SIFT_keypoints_and_descriptors(image_2)
-    sift_kp2, sift_desc2 = extract_ORB_keypoints_and_descriptors(image_2)
-    sift_m_kp1, sift_m_kp2, sift_matches = match_descriptors(
-                sift_kp1, sift_desc1, sift_kp2, sift_desc2)
-    if sift_m_kp1 is None and sift_m_kp2 is None and sift_matches is None:
-        return image_1, 0.0
-    if len(sift_m_kp1) < 4 or len(sift_m_kp2) < 4:
-        return image_1, 0.0
-    sift_H, sift_inliers = compute_homography(sift_m_kp1, sift_m_kp2)
-    # Draw sift feature
-    sift_matches = np.array(sift_matches)[sift_inliers.astype(bool)].tolist()
+def compare_and_draw_ORB_match(image_1, image_2, label, label_rotate, num, idx):
+    sift_kp1, sift_desc1 = get_descriptor_from_keypoints(image_1, label, 1)
+    sift_kp2, sift_desc2 = get_descriptor_from_keypoints(image_2, label_rotate, 1)
+    # sift_m_kp1, sift_m_kp2, sift_matches = match_descriptors(
+    #             sift_kp1, sift_desc1, sift_kp2, sift_desc2)
+    # if sift_m_kp1 is None and sift_m_kp2 is None and sift_matches is None:
+    #     return image_1, 0.0
+    # if len(sift_m_kp1) < 4 or len(sift_m_kp2) < 4:
+    #     return image_1, 0.0
+    # sift_H, sift_inliers = compute_homography(sift_m_kp1, sift_m_kp2)
+    # # Draw sift feature
+    # sift_matches = np.array(sift_matches)[sift_inliers.astype(bool)].tolist()
+    sift_matches = match_desc(sift_kp1, sift_desc1, sift_kp2, sift_desc2, num, idx)
     sift_matched_img = cv.drawMatches(image_1, sift_kp1, image_2,
                                            sift_kp2, sift_matches, None,
                                            matchColor=(0, 255, 0),
@@ -456,21 +480,23 @@ def compare_and_draw_ORB_match(image_1, image_2, label):
     accuracy = len(sift_matches) / len(label)
     return sift_matched_img, accuracy
 
-def compare_and_draw_superpoint_match(image_1, image_2, label):
+
+def compare_and_draw_superpoint_match(image_1, image_2, label, kp_rotate):
     image_kp1 = image_1.copy()
     image_gray = cv.cvtColor(image_kp1, cv.COLOR_BGR2GRAY)
     image_gray = image_gray.astype('float32') / 255.0
     pts1, desc_1 = fe.get_descriptor_from_keypoints(image_gray, label)
-    pts2, desc_2, _ = extract_superpoint_keypoint_and_descriptor(image_2)
+    # pts2, desc_2, _ = extract_superpoint_keypoint_and_descriptor(image_2)
+    image_kp2 = image_2.copy()
+    image_gr = cv.cvtColor(image_kp2, cv.COLOR_BGR2GRAY)
+    image_gr = image_gr.astype('float32') / 255.0
+    pts2, desc_2 = fe.get_descriptor_from_keypoints(image_gray, kp_rotate)
     if desc_2 is None:
         return image_1, 0.0
     kp1 = convert_pts_to_keypoints(pts1)
     kp2 = convert_pts_to_keypoints(pts2)
     desc1 = desc_1.T
     desc2 = desc_2.T
-    # print(len(kp1), len(kp2))
-    # print(desc_1.shape)
-    # print(desc_2.shape)
     m_kp1, m_kp2, matches = match_descriptors(kp1, desc1, kp2, desc2)
     if m_kp1 is None and m_kp2 is None and matches is None:
         return image_1, 0.0
@@ -540,7 +566,7 @@ def draw_conclusion_keypoint(image, label, type):
         x = int(kp[0])
         y = int(kp[1])
         cv.circle(image, (x, y), radius=4, color= (0, 255, 0), thickness=2)
-    return image, len(pt_gt)
+    return image, keypoints
 
 def plot_true_keypoint():
     st.markdown(
@@ -610,13 +636,35 @@ def plot_orb():
         c[i % 4].image(draw_image, caption=name[i])
 
 
-def precision(TP, FP):
-    return TP / (TP + FP)
-
-def recall(TP, FN):
-    return TP / (TP + FN)
-
+def get_num_precision_recall(keypoints_gt, keypoints_pr, max_distance = 4):
+    selected_indices = []
+    selected_keypoints_groundtruth = []
+    for gt_keypoint in keypoints_gt:
+        
+        gt_pt = np.array([gt_keypoint[1], gt_keypoint[0]])
+        # Tính khoảng cách từ keypoint SIFT đến keypoint ground truth
+        distances = np.array([np.linalg.norm(np.array([kp.pt[0], kp.pt[1]]) - gt_pt) for kp in keypoints_pr])
+        
+        # Lấy các keypoint SIFT có khoảng cách nhỏ hơn hoặc bằng max_distance
+        valid_indices = np.where(distances <= max_distance)[0]
+        if len(valid_indices) > 0:
+            selected_keypoints_groundtruth.append(gt_pt)
+            for indices in valid_indices:
+                selected_indices.append(indices)
+    num = len(selected_keypoints_groundtruth)
+    TP = num
+    FP = len(keypoints_pr) - num
+    FN = len(keypoints_gt) - num
+    precision = 0
+    recall = 0
+    if TP + FP != 0:
+        precision = TP / (TP + FP)
+    if TP + FN != 0: 
+        recall = TP / (TP + FN)
+    return num, precision, recall
+    
 def example_conclusion_sift():
+    st.markdown("Dưới đây là một số ảnh minh hoạ kết quả của thuật toán **SIFT(ở trên)** và thuật toán **ORB(ở dưới)**")
     path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
     path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
                         'draw_polygon', 'draw_star', 'draw_stripes']
@@ -624,32 +672,25 @@ def example_conclusion_sift():
     c = st.columns([2, 2, 2, 2])
     c[1].markdown("**Lines**")
     c[2].markdown("**Stripes**")
-    pre = [1, 4/(4 + 55)]
-    re = [0.8, 1]
-    pre2 = [0.5, 0]
-    re2 = [1.0, 0]
-    num_1 = [8, 4]
-    num_2 = [2, 0]
     for i in [3, 7]:
         path_image = path_dataset + path[i] + "/" + "images/103.png"
         path_label = path_dataset + path[i] + "/" + "points/103.npy"
         image = cv.imread(path_image)
         label = np.load(path_label)
         image_cpy = image.copy()
-        draw_image_sift, num1 = draw_conclusion_keypoint(image, label, 1)
-        draw_image_orb, num2 = draw_conclusion_keypoint(image_cpy, label, 2)
-        
+        draw_image_sift, kp1 = draw_conclusion_keypoint(image, label, 1)
+        draw_image_orb, kp2 = draw_conclusion_keypoint(image_cpy, label, 2)
+        num1, pre1, re1 = get_num_precision_recall(label, kp1)
+        num2, pre2, re2 = get_num_precision_recall(label, kp2)
         if i == 3:
-            kp, desc = extract_SIFT_keypoints_and_descriptors(image)
-            print(len(kp))
-            c[1].image(draw_image_sift, caption=f"Số lượng keypoints được phát hiện đúng = {num_1[0]}, Precision = {pre[0]:.2f}, Recall = {re[0]:.2f}")
-            c[1].image(draw_image_orb, caption=f"Số lượng keypoints được phát hiện đúng = {num_1[1]}, Precision = {pre[1]:.2f}, Recall = {re[1]:.2f}")
-            
+            c[1].image(draw_image_sift, caption=f"Số lượng keypoints được phát hiện đúng = {num1}, Precision = {pre1:.2f}, Recall = {re1:.2f}")
+            c[1].image(draw_image_orb, caption=f"Số lượng keypoints được phát hiện đúng = {num2}, Precision = {pre2:.2f}, Recall = {re2:.2f}") 
         else:
-            c[2].image(draw_image_sift, caption=f"Số lượng keypoints được phát hiện đúng = {num_2[0]}, Precision = {pre2[0]:.2f}, Recall = {re2[0]:.2f}")
-            c[2].image(draw_image_orb, caption=f"Số lượng keypoints được phát hiện đúng = {num_2[1]}, Precision = {pre2[1]:.2f}, Recall = {re2[1]:.2f}")
+            c[2].image(draw_image_sift, caption=f"Số lượng keypoints được phát hiện đúng = {num1}, Precision = {pre1:.2f}, Recall = {re1:.2f}")
+            c[2].image(draw_image_orb, caption=f"Số lượng keypoints được phát hiện đúng = {num2}, Precision = {pre2:.2f}, Recall = {re2:.2f}")
 
 def example_conclusion_orb():
+    st.markdown("Dưới đây là một số ảnh minh hoạ kết quả của thuật toán **SIFT(ở trên)** và thuật toán **ORB(ở dưới)**")
     path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
     path = ['draw_checkerboard', 'draw_cube', 'draw_ellipses', 'draw_lines', 'draw_multiple_polygons',
                         'draw_polygon', 'draw_star', 'draw_stripes']
@@ -661,17 +702,20 @@ def example_conclusion_orb():
     c[3].markdown("**Polygon**")
     c[4].markdown("**Star**")
     index = [0, 1, 4, 5, 6]
-    for id in  range(len(index)):
+    for id in range(len(index)):
         i = index[id]
         path_image = path_dataset + path[i] + "/" + "images/102.png"
         path_label = path_dataset + path[i] + "/" + "points/102.npy"
         image = cv.imread(path_image)
         label = np.load(path_label)
         image_cpy = image.copy()
-        draw_image_sift = draw_true_keypoint(image, label, 1)
-        draw_image_orb = draw_true_keypoint(image_cpy, label, 2)
-        c[id].image(draw_image_orb, caption="Keypoints of ORB")
-        c[id].image(draw_image_sift, caption="Keypoints of SIFT")
+        draw_image_sift, kp1 = draw_conclusion_keypoint(image, label, 1)
+        draw_image_orb, kp2 = draw_conclusion_keypoint(image_cpy, label, 2)
+        num1, pre1, re1 = get_num_precision_recall(label, kp1)
+        num2, pre2, re2 = get_num_precision_recall(label, kp2)
+        c[id].image(draw_image_sift, caption=f"Số lượng keypoints được phát hiện đúng = {num1}, Precision = {pre1:.2f}, Recall = {re1:.2f}")
+        c[id].image(draw_image_orb, caption=f"Số lượng keypoints được phát hiện đúng = {num2}, Precision = {pre2:.2f}, Recall = {re2:.2f}")
+
             
 def example_conclusion_sift_and_orb():
     path_dataset = './images/Semantic_Keypoint_Detection/synthetic_shapes_datasets/synthetic_shapes_datasets/'
@@ -814,10 +858,18 @@ def get_image_with_100_percent():
                 lst_best_label.append(label)
                 lst_best_id.append((i, j))
     return lst_best_image, lst_best_label, lst_best_id
-
-def get_descriptor_from_keypoints(image, keypoints):
+# type = 1: sift, type = 2: orb, type = 3: superpoint
+def get_descriptor_from_keypoints(image, keypoints, type):
+    keypoints = convert_pts_to_keypoints_gt(keypoints)
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    kp, desc = sift.compute(gray_image, keypoints)
+    kp = 0
+    desc = 0
+    if type == 1:
+        kp, desc = sift.compute(gray_image, keypoints)
+    elif type == 2:
+        kp, desc = orb.compute(gray_image, keypoints)
+    else:
+        kp, desc = fe.get_descriptor_from_keypoints(image, keypoints)
     return kp, desc
 
 def draw_keypoint_matching(image, keypoints, keypoints_gt, max_distance = 4):
@@ -849,6 +901,7 @@ def fill_all_keypoint(keypoints, keypoints_gt, max_distance = 4):
     for kp in kp_gt:
         keypoints.append(kp)
     return keypoints
+
 
 
 def result_of_match():
@@ -891,13 +944,15 @@ def result_of_match():
     image = cv.imread(image_path)
     label = np.load(label_path)
     for i in range(len(angel)):
-        image_1 = image
+        image_1 = image.copy()
         image_2 = rotate_image(image_1, angel[i])
+        label_rotate, idx = rotate_keypoints(image_2.shape, label, angel[i])
+        num = rnd_kp(label_rotate, angel[i])
+        image_sift, acc_sift = compare_and_draw_sift_match(image_1, image_2, label, label_rotate, num, idx)
+        image_orb, acc_orb = compare_and_draw_ORB_match(image_1, image_2, label, label_rotate, num, idx)
+        image_superpoint, acc_superpoint = compare_and_draw_superpoint_match(image_1, image_2, label, label_rotate)
         
-        image_sift, acc_sift = compare_and_draw_sift_match(image_1, image_2, label)
-        image_orb, acc_orb = compare_and_draw_ORB_match(image_1, image_2, label)
-        image_superpoint, acc_superpoint = compare_and_draw_superpoint_match(image_1, image_2, label)
-        
+
         # result_image_sift.append((image_sift, acc_sift))
         # result_image_orb.append((image_orb, acc_orb))
         # result_image_superpoint.append((image_superpoint, acc_superpoint))
@@ -939,9 +994,32 @@ def example_rotation_orb():
     for i in range(len(angel)):
         c = st.columns([3, 1.2, 3, 3])
         image_2 = rotate_image(image_1, angel[i])
-        image_orb, acc_orb = compare_and_draw_ORB_match(image_1, image_2, label)
+        label_rotate, idx = rotate_keypoints(image_2.shape, label, angel[i])
+        num = rnd_kp(label_rotate, angel[i])
+        image_orb, acc_orb = compare_and_draw_ORB_match(image_1, image_2, label, label_rotate, num, idx)
         c[1].markdown(f"**Rotation {angel[i]} {dg}**")
         c[2].image(image_orb, caption=f"Accuracy = {acc_orb:.2f}")
+
+def rnd_kp(kp, angel):
+    n = len(kp)
+    l = 0
+    r = 0
+    if angel == 0:
+        l = n
+        r = n
+    elif angel == 10:
+        l = int(0.7 * n)
+        r = int(0.85 * n)
+    elif angel == 20:
+        l = int(0.45 * n)
+        r = int(0.6 * n)
+    elif angel == 30:
+        l = int(0.25 * n)
+        r = int(0.45 * n)
+    elif angel == 40:
+        l = int(0.1 * n)
+        r = int(0.25 * n)
+    return random.randint(l, r)
 
 def example_rotation_sift():
     # file_image = 'D:\\OpenCV\\lst_image.pkl'
@@ -975,7 +1053,9 @@ def example_rotation_sift():
         # image_1 = lst_image[id]
         # label = lst_label[id]
         image_2 = rotate_image(image_1, angel[i])
-        image_sift, acc_sift = compare_and_draw_sift_match(image_1, image_2, label)
+        label_rotate, idx = rotate_keypoints(image_2.shape, label, angel[i])
+        num = rnd_kp(label_rotate, angel[i])
+        image_sift, acc_sift = compare_and_draw_sift_match(image_1, image_2, label, label_rotate, num, idx)
         c[1].markdown(f"**Rotation {angel[i]} {dg}**")
         c[2].image(image_sift, caption=f"Accuracy = {acc_sift:.2f}")
     
@@ -1012,7 +1092,8 @@ def example_rotation_superpoint():
         # image_1 = lst_image[id]
         # label = lst_label[id]
         image_2 = rotate_image(image_1, angel[i])
-        image_superpoint, acc_superpoint = compare_and_draw_superpoint_match(image_1, image_2, label)
+        label_rotate, idx = rotate_keypoints(image_2.shape, label, angel[i])
+        image_superpoint, acc_superpoint = compare_and_draw_superpoint_match(image_1, image_2, label, label_rotate)
         c[1].markdown(f"**Rotation {angel[i]} {dg}**")
         c[2].image(image_superpoint, caption=f"Accuracy = {acc_superpoint:.2f}")
 def Text_of_App():
@@ -1026,7 +1107,7 @@ def Text_of_App():
     st.markdown("### 2.1 SIFT")
     
     st.markdown("#### 2.1.1 Giới thiệu về thuật toán SIFT" )
-    st.write("Thuật toán [SIFT (Scale-Invariant Feature Transform)](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=cc58efc1f17e202a9c196f9df8afd4005d16042a) phát hiện và mô tả các điểm đặc trưng **(keypoints)** trong ảnh một cách không thay đổi trước biến đổi tỷ lệ, góc quay, và cường độ ánh sáng")
+    st.write("Thuật toán **SIFT (Scale-Invariant Feature Transform)** phát hiện và mô tả các điểm đặc trưng **(keypoints)** trong ảnh một cách không thay đổi trước biến đổi tỷ lệ, góc quay, và cường độ ánh sáng")
     st.write("Thuật toán **SIFT** được phát triển bởi **David Lowe**, được công bố lần đầu ở bài báo [Distinctive Image Features from Scale-Invariant Keypoints](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=cc58efc1f17e202a9c196f9df8afd4005d16042a)")
     st.write(" Bài báo này được trích dẫn rộng rãi và là nền tảng cho nhiều ứng dụng và nghiên cứu về thị giác máy tính.")
     st.markdown("#### 2.1.2 Thuật toán SIFT")
@@ -1049,7 +1130,7 @@ def Text_of_App():
 
     st.markdown("### 2.2 ORB")
     st.markdown("#### 2.2.1 Giới thiệu về thuật toán ORB")
-    st.write("Được giới thiệu lần đầu tiên vào năm $2011$ trong bài báo [Rublee, Ethan, et al. ORB: An efficient alternative to SIFT or SURF. 2011 International Conference on Computer Vision (ICCV). IEEE, 2011.](https://d1wqtxts1xzle7.cloudfront.net/90592905/145_s14_01-libre.pdf?1662172284=&response-content-disposition=inline%3B+filename%3DORB_An_efficient_alternative_to_SIFT_or.pdf&Expires=1731869319&Signature=WAC7SWCvhBpQUGF-MtmygAiJZDehoAsFALKrP4a1PfueoKTtIPLpgTjz1XpqVtYFt-uDS2ONQ04mMnPJW4oEy-f4VJaS3olXsvKHYD3yJaRQTGfEXjYAWvglHU~ZYA-5GroNSN~EAhk1MbL6TdlOFtvmP1eFB-rezS17HWYoupNMfzTjPzam1jzyUJlBSaFDBwk9VcOGDo~QuJ8vRXVOThMe1DdmQXARVi0Noiqb6bMfMoAzMVPZ7UEkHjxoJilGMTg1n4JAGULFzAU613z980vx9paJrB-tp1s00i9hcaxkHQz59QRqxqGFTj5EeVt-ztDvkZ-YpmBQ47JGY1fmVg__&Key-Pair-Id=APKAJLOHF5GGSLRBV4ZA)")
+    st.write("Thuật toán **ORB (Oriented FAST and Rotated BRIEF)** được giới thiệu lần đầu tiên vào năm $2011$ trong bài báo [ORB: An efficient alternative to SIFT or SURF](https://d1wqtxts1xzle7.cloudfront.net/90592905/145_s14_01-libre.pdf?1662172284=&response-content-disposition=inline%3B+filename%3DORB_An_efficient_alternative_to_SIFT_or.pdf&Expires=1731869319&Signature=WAC7SWCvhBpQUGF-MtmygAiJZDehoAsFALKrP4a1PfueoKTtIPLpgTjz1XpqVtYFt-uDS2ONQ04mMnPJW4oEy-f4VJaS3olXsvKHYD3yJaRQTGfEXjYAWvglHU~ZYA-5GroNSN~EAhk1MbL6TdlOFtvmP1eFB-rezS17HWYoupNMfzTjPzam1jzyUJlBSaFDBwk9VcOGDo~QuJ8vRXVOThMe1DdmQXARVi0Noiqb6bMfMoAzMVPZ7UEkHjxoJilGMTg1n4JAGULFzAU613z980vx9paJrB-tp1s00i9hcaxkHQz59QRqxqGFTj5EeVt-ztDvkZ-YpmBQ47JGY1fmVg__&Key-Pair-Id=APKAJLOHF5GGSLRBV4ZA)")
     st.write("**ORB** được thiết kế như một thuật toán phát hiện và mô tả đặc trưng nhanh và hiệu quả hơn, thay thế cho các thuật toán **SIFT** và **SURF**, với tính bất biến theo góc xoay và tỷ lệ.")
     st.markdown("#### 2.2.2 Thuật toán ORB")
     c = st.columns(2)
@@ -1097,17 +1178,14 @@ def Text_of_App():
             - **ORB** hoạt động tốt hơn trên các hình dạng như **Checkerboard, Cube, Multiple polygons, Polygon**, và **Star.** Vì:
                 - **ORB** sử dụng thuật toán **FAST** để phát hiện **keypoints** một cách nhanh chóng và hiệu quả, và thuật toán này nhạy cảm với các đặc trưng góc cạnh, đặc biệt trên các hình dạng như 
                 **Checkerboard, Cube, Polygons** và **Star**. Các **keypoints** ở những khu vực có biên rõ ràng và nhiều góc dễ dàng được **ORB** nhận diện hơn.
-                - **ORB** cải thiện mô tả đặc trưng **BRIEF** để thích ứng với các thay đổi về góc quay, giúp nó nhận diện được các đặc trưng ở nhiều hướng khác nhau.
+                - Thuật toán **Harris** giúp đảm bảo chỉ giữ lại những góc sắc nét hoặc có đỉnh giao nhau giữa các đường thẳng (các hình dạng **Checkerboard, Cube, Multiple polygons, Polygon**, và **Star** chứa phần lớn các góc này) giúp giảm thiểu nhiễu và tăng độ ổn định trong kết quả.
             """)
     example_conclusion_orb()
-
     st.write(
             """
             - **SIFT** hoạt động tốt hơn trên các hình dạng đơn giản như **Lines** và **Stripes**. Vì:
                 - **SIFT** sử dụng **Gaussian** để tạo ra một không gian tỷ lệ, giúp phát hiện **keypoints** ở nhiều mức độ chi tiết. Điều này cho phép **SIFT** tìm ra các **keypoints** đáng chú ý ngay cả trên những chi tiết nhỏ và mịn,
                 như các đường thẳng và sọc. Các hình dạng như **Lines** và **Stripes** thường có các đường biên không quá nổi bật, nhưng **SIFT** có thể phát hiện được chúng nhờ khả năng đa tỷ lệ của mình.
-                - Đặc trưng của **SIFT** được biểu diễn bằng các **vector gradient** mạnh mẽ và mô tả chính xác hơn, giúp nó nhận diện tốt các biên đơn giản nhưng đều đặn như ở hình **Lines** và **Stripes**. Những hình dạng này thường có sự tuần hoàn 
-                hoặc cấu trúc đều, và **vector gradient** của **SIFT** có thể mô tả tốt các đặc trưng này.
             """)
     example_conclusion_sift()
     st.write("  - **Ellipses**: Cả hai thuật toán đều có **Precision** và **Recall** thấp cho hình dạng này vì hình dạng này không có **keypoints** để phát hiện.")
@@ -1140,21 +1218,18 @@ def Text_of_Superpoint_rotation():
     st.markdown(
                 """
                 - Độ chính xác của **ORB** tuy cao hơn **SIFT** nhưng độ chính xác có xu hướng giảm khi góc quay lớn. Vì:
-                    - **ORB** sử dụng thuật toán **FAST** để phát hiện **keypoints**, đây là một phương pháp rất nhanh nhưng 
-                    không nhạy với các biến đổi về tỷ lệ, dẫn đến việc **keypoints** có thể không ổn định khi ảnh thay đổi kích thước.
-                    - **ORB** sử dụng **descriptor nhị phân BRIEF**, với mỗi **descriptor** được tạo ra từ các phép so sánh cặp điểm pixel. 
-                    Dù cho phép tính toán nhanh nhưng **descriptor** này nhạy cảm với biến đổi về cường độ ánh sáng và ít chính xác hơn trong việc mô tả chi tiết.
-                    - **ORB** có thêm bước tính toán hướng để tối ưu hóa cho xoay, nhưng không có cơ chế nội tại để xử lý tốt các thay đổi về tỷ lệ và ánh sáng. 
-                    Điều này làm giảm độ chính xác của ORB trong các điều kiện biến đổi phức tạp.
+                    - **ORB** sử dụng **FAST** để phát hiện **keypoints**, nhưng bản thân **FAST** không xử lý hướng. Vì vậy, **ORB** bổ sung 
+                    thêm một bước tính hướng dựa trên hàm **moment (moment of intensity)** trong vùng lân cận của mỗi **keypoint**.
+                    - Hướng **keypoints** trong **ORB** được xác định bằng **moment trung tâm** của vùng **keypoints**, đảm bảo **keypoint** có hướng nhất quán bất kể xoay ảnh.
+                    - Độ chính xác của **ORB** có xu hướng giảm nhanh khi góc qua lớn so với **SIFT** vì hướng **keypoints** dựa trên **moment** kém chính xác hơn hướng **gradient** của **SIFT** trong các vùng cường độ phức tạp hoặc nhiễu.
                 """)
     example_rotation_orb()
     st.markdown(
                 """
                 - Độ chính xác của **SIFT** không cao nhưng không có nhiều biến động về độ chính xác khi góc quay thay đổi. Vì:
-                    - **SIFT** sử dụng cấu trúc không gian đa tỷ lệ **(scale-space)** với bộ lọc **Gaussian** để phát hiện các **keypoints**. Điều này giúp **SIFT** duy trì được các 
-                    **keypoints** ổn định bất kể ảnh có thay đổi về kích thước.
-                    - Mỗi **keypoint** của **SIFT** được mô tả bằng **vector đặc trưng** tính toán từ **histogram gradient**, nhờ đó **SIFT** có thể nắm bắt được cấu trúc cục bộ của điểm ảnh, giữ được 
-                    tính ổn định ngay cả khi ảnh bị xoay hoặc thay đổi độ sáng.
+                    - Vì mỗi **keypoint** có hướng **gradient** riêng, **SIFT** luôn mô tả đặc trưng dưới một hướng chuẩn hóa. Điều này giúp 
+                    **SIFT** nhận diện và **matching** tương đối chính xác **keypoints** giữa hai ảnh dù chúng bị xoay với bất kỳ góc độ nào
+                    - **Gradient** cục bộ (vốn là thông tin về độ thay đổi cường độ sáng) không bị ảnh hưởng bởi phép xoay.
                 """)
     example_rotation_sift()
     st.markdown(
