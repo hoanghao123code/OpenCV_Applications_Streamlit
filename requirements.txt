@@ -3,8 +3,8 @@ numpy
 pandas
 pydeck
 streamlit
-# opencv-contrib-python==4.7.0.68
-opencv-python-headless
+opencv-contrib-python==4.7.0.68
+# opencv-python-headless
 streamlit-drawable-canvas==0.8.0
 svgpathtools
 svgwrite
