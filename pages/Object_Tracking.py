@@ -156,8 +156,8 @@ def Example():
                     image_placeholder.image(frame, channels="BGR")
 
 def Challenge_of_CSRT():
-    st.header("3. Một số thách thức")
-    st.markdown("#### 3.1 Occlusion (Che khuất)")
+    st.header("2. Một số thách thức")
+    st.markdown("#### 2.1 Occlusion (Che khuất)")
     c = st.columns(4)
     path_1 = "./images/Object_Tracking/TruocKhiCheKhuat.PNG"
     path_2 = "./images/Object_Tracking/TrongKhiCheKhuat.PNG"
@@ -183,7 +183,7 @@ def Challenge_of_CSRT():
                     - Vì **CSRT** không tích hợp cơ chế xử lý mạnh mẽ để phát hiện hoặc bù đắp khi đối tượng bị che khuất một phần hoặc toàn bộ. 
                     Khi điều này xảy ra, **CSRT** dễ bị trôi **(drift)** theo các đối tượng nhiễu.
                 """)
-    st.markdown("#### 3.2 Background Clutters (Nền phức tạp, nhiễu)")
+    st.markdown("#### 2.2 Background Clutters (Nền phức tạp, nhiễu)")
     path_11 = "./images/Object_Tracking/BackgroundClutter1.PNG"
     path_12 = "./images/Object_Tracking/BackgroundClutter2.PNG"
     path_13 = "./images/Object_Tracking/BackgroundClutter3.PNG"
@@ -200,7 +200,7 @@ def Challenge_of_CSRT():
                     - Vì **CSRT** phụ thuộc vào các đặc trưng trực quan như **HOG** và **Color Names**. Trong các khung cảnh có nền phức tạp
                     hoặc chứa nhiều yếu tố giống đối tượng, thuật toán có thể bị nhầm lẫn giữa đối tượng và nền, dẫn đến mất theo dõi.
                 """)
-    st.markdown("#### 3.3 Fast Motion (Chuyển động nhanh)")
+    st.markdown("#### 2.3 Fast Motion (Chuyển động nhanh)")
     path_21 = "./images/Object_Tracking/Fast1.PNG"
     path_22 = "./images/Object_Tracking/Fast2.PNG"
     path_23 = "./images/Object_Tracking/Fast3.PNG"
@@ -217,7 +217,7 @@ def Challenge_of_CSRT():
                     - Vì **CSRT** dựa trên việc cập nhật thông tin từ khung hình liền kề. Khi đối tượng di chuyển nhanh giữa các khung, 
                     thuật toán có thể không kịp theo dõi do thay đổi lớn về vị trí hoặc kích thước của đối tượng.
                 """)
-    st.markdown("#### 3.4 Illumination Variations (Sự thay đổi ánh sáng)")
+    st.markdown("#### 2.4 Illumination Variations (Sự thay đổi ánh sáng)")
     st.markdown(
                 """
                 -  **CSRT** không được thiết kế để xử lý tốt các thay đổi về ánh sáng. Khi độ sáng thay đổi, các đặc trưng màu sắc 
@@ -226,6 +226,6 @@ def Challenge_of_CSRT():
     
 def App():
     CSRT_Tracking_Algorithm()
-    Example()
+    # Example()
     Challenge_of_CSRT()
 App()
