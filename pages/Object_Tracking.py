@@ -79,7 +79,6 @@ def Example():
     tracker_type = "CSRT"
     # Read video
     video = cv.VideoCapture("./images/Object_Tracking/4215784-hd_1920_1080_30fps.mp4")
- 
     # Read first frame.
     ok, frame = video.read()
     drawing_mode = "rect"
