@@ -75,7 +75,7 @@ def Example():
     if int(minor_ver) < 3:
         tracker = cv.Tracker_create("CSRT")
     else:
-        tracker = cv.TrackerCSRT.create()
+        tracker = cv.TrackerCSRT()
     tracker_type = "CSRT"
     # Read video
     video = cv.VideoCapture("./images/Object_Tracking/4215784-hd_1920_1080_30fps.mp4")
