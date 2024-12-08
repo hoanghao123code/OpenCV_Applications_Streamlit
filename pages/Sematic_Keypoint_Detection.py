@@ -1133,7 +1133,7 @@ def Text_of_App():
     st.write("Thuật toán **ORB (Oriented FAST and Rotated BRIEF)** được giới thiệu lần đầu tiên vào năm $2011$ trong bài báo [ORB: An efficient alternative to SIFT or SURF](https://d1wqtxts1xzle7.cloudfront.net/90592905/145_s14_01-libre.pdf?1662172284=&response-content-disposition=inline%3B+filename%3DORB_An_efficient_alternative_to_SIFT_or.pdf&Expires=1731869319&Signature=WAC7SWCvhBpQUGF-MtmygAiJZDehoAsFALKrP4a1PfueoKTtIPLpgTjz1XpqVtYFt-uDS2ONQ04mMnPJW4oEy-f4VJaS3olXsvKHYD3yJaRQTGfEXjYAWvglHU~ZYA-5GroNSN~EAhk1MbL6TdlOFtvmP1eFB-rezS17HWYoupNMfzTjPzam1jzyUJlBSaFDBwk9VcOGDo~QuJ8vRXVOThMe1DdmQXARVi0Noiqb6bMfMoAzMVPZ7UEkHjxoJilGMTg1n4JAGULFzAU613z980vx9paJrB-tp1s00i9hcaxkHQz59QRqxqGFTj5EeVt-ztDvkZ-YpmBQ47JGY1fmVg__&Key-Pair-Id=APKAJLOHF5GGSLRBV4ZA)")
     st.write("**ORB** được thiết kế như một thuật toán phát hiện và mô tả đặc trưng nhanh và hiệu quả hơn, thay thế cho các thuật toán **SIFT** và **SURF**, với tính bất biến theo góc xoay và tỷ lệ.")
     st.markdown("#### 2.2.2 Thuật toán ORB")
-    c = st.columns(2)
+    c = st.columns(1)
     with c[0]:
         st.markdown(
                 """
@@ -1143,9 +1143,9 @@ def Text_of_App():
                 3. **Mô tả đặc trưng:** Sử dụng **BRIEF** với sự điều chỉnh theo hướng keypoint để tạo descriptor.
                 4. **So khớp:** Dùng khoảng cách Hamming để so khớp descriptor giữa các ảnh.
                 """)
-    with c[1]:
-        st.write("Dưới đây là hình ảnh minh họa thuật toán **ORB**")
-        st.image('./images/Semantic_Keypoint_Detection/achitecture_of_ORB.png', channels="BGR", width=480)
+    # with c[1]:
+    st.write("Dưới đây là hình ảnh minh họa thuật toán **ORB**")
+    st.image('./images/Semantic_Keypoint_Detection/achitecture_of_ORB.png', channels="BGR")
     st.write("Dưới đây là kết quả của một số ảnh khi áp dụng thuật toán **ORB**")
     plot_orb()
 
@@ -1171,24 +1171,29 @@ def Text_of_App():
     st.header("5. Thảo luận")
     st.markdown("**Nhận xét tổng quan:**")
     st.write("  - **ORB** nhìn chung có **Precision** và **Recall** cao hơn cho các hình dạng có đặc trưng nổi bật, dễ phát hiện và phân biệt như **Checkerboard, Cube, Multiple polygons, Polygon**, và **Star**.")
-    st.write("  - **SIFT** có **Precision** và **Recall** cao hơn trên các hình dạng có chi tiết đơn giản hoặc đều đặn như **Lines** và **Stripes**.")
+    st.write("  - **SIFT** có **Precision** và **Recall** cao hơn trên các hình dạng có chi tiết đơn giản như **Lines** và **Stripes**.")
     st.markdown("**Nhận xét và giải thích:**")
     st.write(
             """
-            - **ORB** hoạt động tốt hơn trên các hình dạng như **Checkerboard, Cube, Multiple polygons, Polygon**, và **Star.** Vì:
-                - **ORB** sử dụng thuật toán **FAST** để phát hiện **keypoints** một cách nhanh chóng và hiệu quả, và thuật toán này nhạy cảm với các đặc trưng góc cạnh, đặc biệt trên các hình dạng như 
-                **Checkerboard, Cube, Polygons** và **Star**. Các **keypoints** ở những khu vực có biên rõ ràng và nhiều góc dễ dàng được **ORB** nhận diện hơn.
-                - Thuật toán **Harris** giúp đảm bảo chỉ giữ lại những góc sắc nét hoặc có đỉnh giao nhau giữa các đường thẳng (các hình dạng **Checkerboard, Cube, Multiple polygons, Polygon**, và **Star** chứa phần lớn các góc này) giúp giảm thiểu nhiễu và tăng độ ổn định trong kết quả.
+            - **ORB** hoạt động hiệu quả trên các hình dạng như **Checkerboard, Cube, Multiple Polygons, Polygon**, và **Star** nhờ cơ chế phát hiện và mô tả đặc trưng tối ưu của nó:
+                - Phát hiện **keypoints** bằng thuật toán **FAST**: **ORB** sử dụng thuật toán **FAST (Features from Accelerated Segment Test)** để phát hiện **keypoints** nhanh chóng và hiệu quả.
+                  Thuật toán này đặc biệt nhạy với các đặc trưng góc cạnh **(corner features)**, vốn phổ biến trong các hình dạng như **Checkerboard, Cube, Polygons**, và **Star**. Những khu vực 
+                  có biên rõ ràng và nhiều góc giao nhau là nơi **keypoints** được nhận diện dễ dàng và chính xác hơn.
+                - Lọc đặc trưng với **Harris Corner**: **ORB** tích hợp thước đo **Harris** để đánh giá và xếp hạng các góc, giúp chọn lọc những **keypoints** đáng tin cậy nhất. Quá trình này đảm bảo chỉ giữ lại 
+                các góc sắc nét hoặc điểm giao nhau giữa các đường thẳng, đặc điểm nổi bật của các hình dạng như **Checkerboard, Cube, và Polygons**. Điều này không chỉ giảm nhiễu từ các điểm không ổn định mà còn 
+                tăng độ chính xác và ổn định của kết quả.
+
             """)
     example_conclusion_orb()
     st.write(
             """
-            - **SIFT** hoạt động tốt hơn trên các hình dạng đơn giản như **Lines** và **Stripes**. Vì:
-                - **SIFT** sử dụng **Gaussian** để tạo ra một không gian tỷ lệ, giúp phát hiện **keypoints** ở nhiều mức độ chi tiết. Điều này cho phép **SIFT** tìm ra các **keypoints** đáng chú ý ngay cả trên những chi tiết nhỏ và mịn,
-                như các đường thẳng và sọc. Các hình dạng như **Lines** và **Stripes** thường có các đường biên không quá nổi bật, nhưng **SIFT** có thể phát hiện được chúng nhờ khả năng đa tỷ lệ của mình.
+            - **SIFT** hoạt động tốt trên các hình dạng tuyến tính như **Lines** và **Stripes**. Vì: 
+                - Nhờ khả năng phân tích đa tỷ lệ **(scale space)** thông qua bộ lọc **Gaussian và DoG (Difference of Gaussian)**. Thuật toán không chỉ dựa vào cường độ **gradient** mà còn phân tích 
+            đặc trưng cục bộ, giúp phát hiện các chi tiết có tính lặp lại nhưng khác biệt ở nhiều mức tỷ lệ. Điều này đảm bảo **SIFT** ổn định và hiệu quả ngay cả với các hình dạng có **gradient** thấp.
             """)
     example_conclusion_sift()
     st.write("  - **Ellipses**: Cả hai thuật toán đều có **Precision** và **Recall** thấp cho hình dạng này vì hình dạng này không có **keypoints** để phát hiện.")
+
 
 def Text_of_Superpoint_rotation():
     dg = "\u00B0"
@@ -1243,6 +1248,7 @@ def Text_of_Superpoint_rotation():
                 """)
     example_rotation_superpoint()
     
+
 def App():
     tab = st.tabs(["**Sematic Keypoint Detection**", "**Keypoint Matching**"])
     with tab[0]:

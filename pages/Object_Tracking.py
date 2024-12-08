@@ -24,42 +24,48 @@ def CSRT_Tracking_Algorithm():
                 các tình huống biến đổi về hình dạng hoặc môi trường.
                 """)
     st.markdown("#### 1.2 Quy trình hoạt động của CSRT")
-    st.markdown("##### 1.2.1 Khởi tạo")
-    st.markdown(
-                """
-                - Người dùng chọn một vùng ban đầu **(bounding box)** chứa đối tượng cần theo dõi.
-                - **CSRT** tạo một mô hình dựa trên các đặc trưng của đối tượng trong **bounding box**.
-                - Tính toán các đặc trưng từ **bounding box** bằng cách sử dụng:
-                    - Kênh màu (Color Channels).
-                    - Gradient hướng (HOG).
-                    - Đặc trưng không gian và tần số.
-                """)
-    st.markdown("##### 1.2.2 Theo dõi")
-    st.markdown(
-                """
-                - Ở mỗi frame mới:
-                    - Trích xuất các đặc trưng từ vùng lân cận **bounding box** hiện tại.
-                        - Xác định một vùng lân cận **(search window)** xung quanh vị trí của **bounding box** trong **frame** trước.
-                        - Trích xuất các kênh đặc trưng từ vùng này
-                    - Tính toán độ tin cậy của từng kênh và từng vùng không gian.
-                        - Các kênh (ví dụ: màu, gradient) được đánh giá để xem kênh nào phù hợp nhất để phân biệt đối tượng.
-                        - Các kênh không đáng tin cậy sẽ được giảm trọng số hoặc loại bỏ trong tính toán.
-                        - Áp dụng một mặt nạ **(spatial reliability mask)** để xác định vùng nào trong **bounding box** đáng tin cậy nhất.
-                        - Loại bỏ các vùng nhiễu hoặc không liên quan
-                    - So khớp
-                        - Sử dụng bộ lọc đã huấn luyện từ **frame** trước để tìm vị trí phù hợp nhất trong vùng lân cận.
-                        - Tính toán một **hàm mất mát** để xác định vị trí của **bounding box** tối ưu.
-                    - Cập nhật bộ lọc dự đoán vị trí tiếp theo của đối tượng.
-                        - Điều chỉnh bộ lọc dự đoán để phản ánh các thay đổi về hình dạng, kích thước, hoặc môi trường của đối tượng.
-                    - Đưa ra vị trí **bounding box** mới.
-                        - Lấy vùng **bounding box** mới từ **frame hiện tại**.
-                        - Cập nhật các đặc trưng **(kênh màu, gradient, tần số)**.
-                """)
-    st.markdown("##### 1.2.3 Cập nhật")
-    st.markdown(
-                """
-                - Khi đối tượng thay đổi (về hình dạng hoặc kích thước), **CSRT** điều chỉnh mô hình bằng cách cập nhật thông tin từ các **frame** mới.
-                """)
+    image = cv.imread("./images/Object_Tracking/pineline_CSRT.PNG")
+    st.image(image, channels="BGR")
+    c = st.columns(2)
+    with c[0]:
+        st.markdown("##### 1.2.1 Khởi tạo")
+        st.markdown(
+                    """
+                    - Người dùng chọn một vùng ban đầu **(bounding box)** chứa đối tượng cần theo dõi.
+                    - **CSRT** tạo một mô hình dựa trên các đặc trưng của đối tượng trong **bounding box**.
+                    - Tính toán các đặc trưng từ **bounding box** bằng cách sử dụng:
+                        - Kênh màu (Color Channels).
+                        - Gradient hướng (HOG).
+                        - Đặc trưng không gian và tần số.
+                    """)
+        st.markdown("##### 1.2.3 Cập nhật")
+        st.markdown(
+                    """
+                    - Khi đối tượng thay đổi (về hình dạng hoặc kích thước), **CSRT** điều chỉnh mô hình bằng cách cập nhật thông tin từ các **frame** mới.
+                    """)
+    with c[1]:
+        st.markdown("##### 1.2.2 Theo dõi")
+        st.markdown(
+                    """
+                    - Ở mỗi frame mới:
+                        - Trích xuất các đặc trưng từ vùng lân cận **bounding box** hiện tại.
+                            - Xác định một vùng lân cận **(search window)** xung quanh vị trí của **bounding box** trong **frame** trước.
+                            - Trích xuất các kênh đặc trưng từ vùng này
+                        - Tính toán độ tin cậy của từng kênh và từng vùng không gian.
+                            - Các kênh (ví dụ: màu, gradient) được đánh giá để xem kênh nào phù hợp nhất để phân biệt đối tượng.
+                            - Các kênh không đáng tin cậy sẽ được giảm trọng số hoặc loại bỏ trong tính toán.
+                            - Áp dụng một mặt nạ **(spatial reliability mask)** để xác định vùng nào trong **bounding box** đáng tin cậy nhất.
+                            - Loại bỏ các vùng nhiễu hoặc không liên quan
+                        - So khớp
+                            - Sử dụng bộ lọc đã huấn luyện từ **frame** trước để tìm vị trí phù hợp nhất trong vùng lân cận.
+                            - Tính toán một **hàm mất mát** để xác định vị trí của **bounding box** tối ưu.
+                        - Cập nhật bộ lọc dự đoán vị trí tiếp theo của đối tượng.
+                            - Điều chỉnh bộ lọc dự đoán để phản ánh các thay đổi về hình dạng, kích thước, hoặc môi trường của đối tượng.
+                        - Đưa ra vị trí **bounding box** mới.
+                            - Lấy vùng **bounding box** mới từ **frame hiện tại**.
+                            - Cập nhật các đặc trưng **(kênh màu, gradient, tần số)**.
+                    """)
+    
 def Example():
     undo_symbol = "↩️"
     trash_symbol = "🗑️"
@@ -75,10 +81,10 @@ def Example():
     if int(minor_ver) < 3:
         tracker = cv.Tracker_create("CSRT")
     else:
-        tracker = cv.TrackerCSRT()
+        tracker = cv.TrackerCSRT_create()
     tracker_type = "CSRT"
     # Read video
-    video = cv.VideoCapture("./images/Object_Tracking/4215784-hd_1920_1080_30fps.mp4")
+    video = cv.VideoCapture("./images/Object_Tracking/39837-424360872_small.mp4")
     # Read first frame.
     ok, frame = video.read()
     drawing_mode = "rect"
@@ -154,6 +160,8 @@ def Example():
                     # Display FPS on frame
                     cv.putText(frame, "FPS : " + str(int(fps)), (100,50), cv.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50), 2);
                     image_placeholder.image(frame, channels="BGR")
+                    # st.image(frame, channels="BGR")
+
 
 def Challenge_of_CSRT():
     st.header("2. Một số thách thức")
@@ -226,6 +234,6 @@ def Challenge_of_CSRT():
     
 def App():
     CSRT_Tracking_Algorithm()
-    # Example()
+    Example()
     Challenge_of_CSRT()
 App()
