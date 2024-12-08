@@ -234,6 +234,6 @@ def Challenge_of_CSRT():
     
 def App():
     CSRT_Tracking_Algorithm()
-    Example()
+    # Example()
     Challenge_of_CSRT()
 App()

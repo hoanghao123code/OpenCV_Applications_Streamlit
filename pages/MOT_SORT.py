@@ -74,6 +74,7 @@ def SORT_Algorithm():
                     - Đối tượng mới xuất hiện trong khung hình sẽ được gán **ID** mới.
                     """)
 
+
 def Challenger_of_SORT():
     st.header("2. Một số thách thức của thuật toán SORT")
     st.markdown("#### 2.1 Nhạy cảm với việc mất dấu (Occlusion)")
