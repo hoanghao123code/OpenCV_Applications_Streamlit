@@ -108,13 +108,6 @@ def Challenger_of_SORT():
                     """
         )
 
-    
-    st.markdown("#### 2.2 Đối tượng bị che khuất 1 phần hoặc toàn bộ")
-    st.markdown(
-                """
-                - Khi 1 ID được gán cho 1 đối tượng, ID cần đảm bảo nhất quán trong suốt video, tuy nhiên, khi một đối tượng bị che khuất, 
-                nếu chỉ dựa riêng vào object detection là không đủ để giải quyết vấn đề này.
-                """)
 
 def App():
     SORT_Algorithm()
