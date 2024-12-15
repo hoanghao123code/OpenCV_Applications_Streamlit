@@ -65,6 +65,18 @@ def CSRT_Tracking_Algorithm():
                             - Lấy vùng **bounding box** mới từ **frame hiện tại**.
                             - Cập nhật các đặc trưng **(kênh màu, gradient, tần số)**.
                     """)
+
+def Video_demo():
+    st.header("2. Ví dụ minh hoạ")
+    st.markdown("Dưới đây là video mô phỏng **CSRT tracking**")
+    c = st.columns([6, 4])
+    c[0].video("./images/Object_Tracking/video_demo.mp4", format='video/mp4', start_time=0)
+    st.markdown(
+                """
+                - Sau khi xác định **bounding box**, dựa vào thuật toán **CSRT**, vận động viên **Usain Bolt** 
+                được theo dõi trong suốt quá trình chạy.
+                """
+    )
     
 def Example():
     undo_symbol = "↩️"
@@ -164,8 +176,8 @@ def Example():
 
 
 def Challenge_of_CSRT():
-    st.header("2. Một số thách thức")
-    st.markdown("#### 2.1 Occlusion (Che khuất)")
+    st.header("3. Một số thách thức")
+    st.markdown("#### 3.1 Occlusion (Che khuất)")
     c = st.columns(4)
     path_1 = "./images/Object_Tracking/TruocKhiCheKhuat.PNG"
     path_2 = "./images/Object_Tracking/TrongKhiCheKhuat.PNG"
@@ -191,7 +203,7 @@ def Challenge_of_CSRT():
                     - Vì **CSRT** không tích hợp cơ chế xử lý mạnh mẽ để phát hiện hoặc bù đắp khi đối tượng bị che khuất một phần hoặc toàn bộ. 
                     Khi điều này xảy ra, **CSRT** dễ bị trôi **(drift)** theo các đối tượng nhiễu.
                 """)
-    st.markdown("#### 2.2 Background Clutters (Nền phức tạp, nhiễu)")
+    st.markdown("#### 3.2 Background Clutters (Nền phức tạp, nhiễu)")
     path_11 = "./images/Object_Tracking/BackgroundClutter1.PNG"
     path_12 = "./images/Object_Tracking/BackgroundClutter2.PNG"
     path_13 = "./images/Object_Tracking/BackgroundClutter3.PNG"
@@ -208,7 +220,7 @@ def Challenge_of_CSRT():
                     - Vì **CSRT** phụ thuộc vào các đặc trưng trực quan như **HOG** và **Color Names**. Trong các khung cảnh có nền phức tạp
                     hoặc chứa nhiều yếu tố giống đối tượng, thuật toán có thể bị nhầm lẫn giữa đối tượng và nền, dẫn đến mất theo dõi.
                 """)
-    st.markdown("#### 2.3 Fast Motion (Chuyển động nhanh)")
+    st.markdown("#### 3.3 Fast Motion (Chuyển động nhanh)")
     path_21 = "./images/Object_Tracking/Fast1.PNG"
     path_22 = "./images/Object_Tracking/Fast2.PNG"
     path_23 = "./images/Object_Tracking/Fast3.PNG"
@@ -225,7 +237,7 @@ def Challenge_of_CSRT():
                     - Vì **CSRT** dựa trên việc cập nhật thông tin từ khung hình liền kề. Khi đối tượng di chuyển nhanh giữa các khung, 
                     thuật toán có thể không kịp theo dõi do thay đổi lớn về vị trí hoặc kích thước của đối tượng.
                 """)
-    st.markdown("#### 2.4 Illumination Variations (Sự thay đổi ánh sáng)")
+    st.markdown("#### 3.4 Illumination Variations (Sự thay đổi ánh sáng)")
     st.markdown(
                 """
                 -  **CSRT** không được thiết kế để xử lý tốt các thay đổi về ánh sáng. Khi độ sáng thay đổi, các đặc trưng màu sắc 
@@ -235,5 +247,6 @@ def Challenge_of_CSRT():
 def App():
     CSRT_Tracking_Algorithm()
     # Example()
+    Video_demo()
     Challenge_of_CSRT()
 App()

@@ -84,6 +84,31 @@ def Challenger_of_SORT():
                 Tuy nhiên, khi xảy ra che khuất hoặc đối tượng bị tạm thời mất dấu, thuật toán dễ gán sai hoặc tạo **ID** mới cho đối tượng, 
                 dẫn đến sự phân mảnh **(ID switching)**.
                 """)
+    c = st.columns(2)
+    with c[0]:
+        st.video("./images/MOT_SORT/video1_trim.mp4", format='video/mp4', start_time=0)
+        st.markdown(
+                    """
+                    - Ở giấy thứ $6$, người có **ID 1** bị che khuất bởi bảng ở cột đèn khiến cho người đó không được theo dõi,
+                    sau khi không bị che khuất, người **ID 1** được gián lại **ID** là **8**.
+                    - Vì **SORT** dựa vào các **detection** liên tiếp và không có cơ chế nhận diện lại đối tượng đã mất track. Vì vậy, 
+                    khi một người bị che khuất và không được phát hiện, track của người **ID 1** bị xóa. Khi họ xuất hiện trở lại, họ sẽ được coi là 
+                    đối tượng mới và gán một **ID** khác là **8**.
+                    """
+        )
+
+    with c[1]:
+        st.video("./images/MOT_SORT/video2.mp4", format='video/mp4', start_time=0)
+        st.markdown(
+                    """
+                    - Ở giấy thứ $12$, người có **ID 35** bị che khuất bởi người có **ID 8** nên bị mất dấu và không được theo dõi,
+                    sau đó người đó được gán lại **ID** là **89**.
+                    - VÌ khi bị che khuất, và không được phát hiện, track của người **ID 35** sẽ bị xóa. Khi họ xuất hiện trở lại, họ sẽ được coi là 
+                    đối tượng mới và gán một **ID** khác là **89**.
+                    """
+        )
+
+    
     st.markdown("#### 2.2 Đối tượng bị che khuất 1 phần hoặc toàn bộ")
     st.markdown(
                 """
