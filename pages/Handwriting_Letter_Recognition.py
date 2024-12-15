@@ -138,6 +138,37 @@ def Applications():
                 c[1].markdown(f"<p style='font-size: 30px;'>{results[0]}</p>", unsafe_allow_html=True)
             else:
                 st.warning("Vui lòng vẽ kí tự cần dự đoán trước khi **Submit!**")
+
+def Results():
+    c = st.columns(2)
+    with c[0]:
+        st.markdown("Dưới đây là biểu đồ biểu diễn độ chính xác trên tập huấn luyện (**train**) và tập xác thực (**validation**)")
+        image_accuracy = cv.imread("./images/Handwriting_Letter_Recognize/train_val_acc.PNG")
+        st.image(image_accuracy, caption="Training and Validation Acccuracy", channels="BGR")
+        accuracy_test = 0.976
+        st.markdown(f"Độ chính xác trên tập **test** là: **{accuracy_test}**")
+    with c[1]:
+        st.markdown("Dưới đây là biểu đồ biểu diễn độ mất mát trên tập huấn luyện (**train**) và tập xác thực (**validation**)")
+        image_loss = cv.imread("./images/Handwriting_Letter_Recognize/train_val_loss.PNG")
+        st.image(image_loss, caption="Training and Validation Loss", channels="BGR")
+
+def Training():
+    st.markdown("#### 2.3 Quá trình huấn luyện")
+    st.markdown(
+                """
+                - Trong dataset **MNIST:**
+                    - Chia tập **training set** thành 2 tập:
+                        - $50000$ ảnh cho tập huấn luyện (train)
+                        - $10000$ ảnh cho tập xác thực (validation)
+                    - Sử dụng $10000$ ảnh tập **test set** làm tập test.
+                - Các tham số sử dụng trong quá trình huấn luyện:
+                    - Hàm tối ưu: **Adam**
+                    - Hàm mất mát: **sparse_categorical_crossentropy**
+                    - Độ chính xác: **Accuracy**
+                    - Learning_rate: **0.001**
+                    - Số lượng Epoch: **10**
+                """
+    )
 def Text():
     st.header("1. Giới thiệu dataset MNIST")
     st.markdown(
@@ -268,8 +299,12 @@ def Text():
                         - Hàm kích hoạt **softmax**: Chuyển đổi các giá trị thành xác suất cho từng lớp, giúp mô hình dễ dàng phân loại.
                     """
         )
-    st.markdown("#### 3. Ứng dụng")
+    Training()
+    st.markdown("#### 3. Kết quả")
+    Results()
+    st.markdown("#### 4. Ứng dụng")
     Applications()
+
 def App():
     Text()
 App()
