@@ -22,12 +22,9 @@ def Introduce():
     )
 
 def flip_image_opencv(img, flip_code):
-
-  try:
     flipped_img = cv.flip(img, flip_code)
     return flipped_img
-  except Exception as e:
-    return None
+  
 
 def Flip():
     st.markdown("#### 2.1 Flip (Lật ảnh)")
@@ -45,16 +42,14 @@ def Flip():
             image_ul = np.array(Image.open(image_upload))
             image = None
             c = st.columns([1.5, 1.5, 7])
-            with c[0]:
-                if st.button("Lật ngang"):
-                    image = flip_image_opencv(image_ul, 1)
-            with c[1]:
-                if st.button("Lật dọc"):
-                    image = flip_image_opencv(image_ul, 0)
+            if c[0].button("Lật ngang"):
+                image = flip_image_opencv(image_ul, 1)
+            if c[1].button("Lật dọc"):
+                image = flip_image_opencv(image_ul, 0)
             
             if image is not None:
-                st.markdown("**Ảnh sau khi lật**")
-                st.image(image)
+                cc[1].markdown("**Ảnh sau khi lật**")
+                cc[1].image(image)
                 result_image = Image.fromarray(image)
                 buf = BytesIO()
                 result_image.save(buf, format = "PNG")
@@ -94,16 +89,14 @@ def Rotation():
             angel = 0
             angel = st.slider("Chọn góc xoay", 0, 360, 0)
             c = st.columns([1.5, 1.5, 7])
-            with c[0]:
-                if st.button("Xoay Trái"):
-                    angel = -90
-            with c[1]:
-                if st.button("Xoay Phải"):
+            if c[0].button("Xoay Trái"):
+                angel = -90
+            if c[1].button("Xoay Phải"):
                     angel = 90
             image = rotate_image(image_ul, angel)
             if image is not None:
-                st.markdown("**Ảnh sau khi xoay**")
-                st.image(image)
+                cc[1].markdown("**Ảnh sau khi xoay**")
+                cc[1].image(image)
                 result_image = Image.fromarray(image)
                 buf = BytesIO()
                 result_image.save(buf, format = "PNG")
@@ -136,15 +129,14 @@ def Colorspace():
         if image_upload_color is not None:
             image_ul = np.array(Image.open(image_upload_color))
             image = None
-            c = st.columns([1.5, 1.5, 7])
             color_type = st.selectbox(
                 'Chọn một tùy chọn:',
                 ('BGR', 'Grayscale', 'HSV')
 )
             image = convert_colorspace(image_ul, color_type)
             if image is not None:
-                st.markdown("**Ảnh sau khi điều chỉnh màu sắc**")
-                st.image(image)
+                cc[1].markdown("**Ảnh sau khi điều chỉnh màu sắc**")
+                cc[1].image(image)
                 result_image = Image.fromarray(image)
                 buf = BytesIO()
                 result_image.save(buf, format = "PNG")
@@ -182,8 +174,8 @@ def Translation():
             ty = st.slider("Trục Y", -image_ul.shape[1], image_ul.shape[1], 0)
             image = translate_image(image_ul, tx, ty)
             if image is not None:
-                st.markdown("**Ảnh sau khi di chuyển**")
-                st.image(image)
+                cc[1].markdown("**Ảnh sau khi di chuyển**")
+                cc[1].image(image)
                 result_image = Image.fromarray(image)
                 buf = BytesIO()
                 result_image.save(buf, format = "PNG")
@@ -215,9 +207,9 @@ def Cropping():
 
             y_max = st.slider("Y max", y_min + 1, height, height)
             cropped_img = image_ul.crop((x_min, y_min, x_max, y_max))
-            with cc[1]:
-                st.markdown("**Ảnh sau khi di cắt**")
-                st.image(cropped_img)
+            if cropped_img is not None:
+                cc[1].markdown("**Ảnh sau khi di cắt**")
+                cc[1].image(cropped_img)
                 cropped_img = np.array(cropped_img)
                 result_image = Image.fromarray(cropped_img)
                 buf = BytesIO()
