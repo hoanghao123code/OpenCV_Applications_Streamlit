@@ -27,7 +27,7 @@ def flip_image_opencv(img, flip_code):
   
 
 def Flip():
-    st.markdown("#### 2.1 Flip (Lật ảnh)")
+    # st.markdown("#### 2.1 Flip (Lật ảnh)")
     st.markdown(
                 """
                 - **Hướng dẫn sử dụng:**
@@ -71,7 +71,7 @@ def rotate_image(image, angle):
     return rotated_image
 
 def Rotation():
-    st.markdown("#### 2.2 Rotation (Xoay ảnh)")
+    # st.markdown("#### 2.2 Rotation (Xoay ảnh)")
     st.markdown(
                 """
                 - **Hướng dẫn sử dụng:**
@@ -113,7 +113,7 @@ def convert_colorspace(image, color_type):
     return image
 
 def Colorspace():
-    st.markdown("#### 2.3 Colorspace (Điều chỉnh màu sắc)")
+    # st.markdown("#### 2.3 Colorspace (Điều chỉnh màu sắc)")
     st.markdown(
                 """
                 - **Hướng dẫn sử dụng:**
@@ -154,7 +154,7 @@ def translate_image(image, tx, ty):
   return translated_image
 
 def Translation():
-    st.markdown("#### 2.4 Di chuyển hình ảnh (Translation)")
+    # st.markdown("#### 2.4 Di chuyển hình ảnh (Translation)")
     st.markdown(
                 """
                 - **Hướng dẫn sử dụng:**
@@ -183,7 +183,7 @@ def Translation():
                     st.download_button("Download ảnh sau khi xử lí", byte_im, 'translation_result.png', "image/png")
     
 def Cropping():
-    st.markdown("#### 2.5 Cắt ảnh (Cropping)")
+    # st.markdown("#### 2.5 Cắt ảnh (Cropping)")
     st.markdown(
                 """
                 - **Hướng dẫn sử dụng:**
@@ -220,12 +220,16 @@ def Cropping():
 def Application():
     st.header("2. Ứng dụng")
     c = st.columns(2)
-    with c[0]:
+    select_box = st.selectbox("Chọn kĩ thuật xử lí ảnh", ("Flip", "Rotation", "Colorspace", "Translation", "Cropping"))
+    if select_box == "Flip":
         Flip()
+    elif select_box == "Rotation":
         Rotation()
+    elif select_box == "Colorspace":
         Colorspace()
-    with c[1]:
+    elif select_box == "Translation":
         Translation()
+    elif select_box == "Cropping":
         Cropping()
 def App():
     Introduce()
