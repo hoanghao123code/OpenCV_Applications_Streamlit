@@ -53,15 +53,14 @@ def Flip():
                     image = flip_image_opencv(image_ul, 0)
             
             if image is not None:
-                with cc[1]:
-                    st.markdown("**Ảnh sau khi lật**")
-                    st.image(image)
-                    result_image = Image.fromarray(image)
-                    buf = BytesIO()
-                    result_image.save(buf, format = "PNG")
-                    byte_im = buf.getvalue()
-                    if byte_im is not None:
-                        st.download_button("Download ảnh sau khi xử lí", byte_im, 'flip_result.png', "image/png")
+                st.markdown("**Ảnh sau khi lật**")
+                st.image(image)
+                result_image = Image.fromarray(image)
+                buf = BytesIO()
+                result_image.save(buf, format = "PNG")
+                byte_im = buf.getvalue()
+                if byte_im is not None:
+                    st.download_button("Download ảnh sau khi xử lí", byte_im, 'flip_result.png', "image/png")
 
 def rotate_image(image, angle):
     angle = -angle
@@ -103,15 +102,14 @@ def Rotation():
                     angel = 90
             image = rotate_image(image_ul, angel)
             if image is not None:
-                with cc[1]:
-                    st.markdown("**Ảnh sau khi xoay**")
-                    st.image(image)
-                    result_image = Image.fromarray(image)
-                    buf = BytesIO()
-                    result_image.save(buf, format = "PNG")
-                    byte_im = buf.getvalue()
-                    if byte_im is not None:
-                        st.download_button("Download ảnh sau khi xử lí", byte_im, 'rotation_result.png', "image/png")
+                st.markdown("**Ảnh sau khi xoay**")
+                st.image(image)
+                result_image = Image.fromarray(image)
+                buf = BytesIO()
+                result_image.save(buf, format = "PNG")
+                byte_im = buf.getvalue()
+                if byte_im is not None:
+                    st.download_button("Download ảnh sau khi xử lí", byte_im, 'rotation_result.png', "image/png")
 
 def convert_colorspace(image, color_type):
     # if color_type == "BGR":
@@ -145,15 +143,14 @@ def Colorspace():
 )
             image = convert_colorspace(image_ul, color_type)
             if image is not None:
-                with cc[1]:
-                    st.markdown("**Ảnh sau khi điều chỉnh màu sắc**")
-                    st.image(image)
-                    result_image = Image.fromarray(image)
-                    buf = BytesIO()
-                    result_image.save(buf, format = "PNG")
-                    byte_im = buf.getvalue()
-                    if byte_im is not None:
-                        st.download_button("Download ảnh sau khi xử lí", byte_im, 'colorspace_result.png', "image/png")
+                st.markdown("**Ảnh sau khi điều chỉnh màu sắc**")
+                st.image(image)
+                result_image = Image.fromarray(image)
+                buf = BytesIO()
+                result_image.save(buf, format = "PNG")
+                byte_im = buf.getvalue()
+                if byte_im is not None:
+                    st.download_button("Download ảnh sau khi xử lí", byte_im, 'colorspace_result.png', "image/png")
 
 def translate_image(image, tx, ty):
 
@@ -185,15 +182,14 @@ def Translation():
             ty = st.slider("Trục Y", -image_ul.shape[1], image_ul.shape[1], 0)
             image = translate_image(image_ul, tx, ty)
             if image is not None:
-                with cc[1]:
-                    st.markdown("**Ảnh sau khi di chuyển**")
-                    st.image(image)
-                    result_image = Image.fromarray(image)
-                    buf = BytesIO()
-                    result_image.save(buf, format = "PNG")
-                    byte_im = buf.getvalue()
-                    if byte_im is not None:
-                        st.download_button("Download ảnh sau khi xử lí", byte_im, 'translation_result.png', "image/png")
+                st.markdown("**Ảnh sau khi di chuyển**")
+                st.image(image)
+                result_image = Image.fromarray(image)
+                buf = BytesIO()
+                result_image.save(buf, format = "PNG")
+                byte_im = buf.getvalue()
+                if byte_im is not None:
+                    st.download_button("Download ảnh sau khi xử lí", byte_im, 'translation_result.png', "image/png")
     
 def Cropping():
     st.markdown("#### 2.5 Cắt ảnh (Cropping)")
