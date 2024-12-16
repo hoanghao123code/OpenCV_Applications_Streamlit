@@ -168,7 +168,7 @@ def Translation():
         if image_upload_color is not None:
             image_ul = np.array(Image.open(image_upload_color))
             image = None
-            c = st.columns([1.5, 1.5, 7])
+            # c = st.columns([1.5, 1.5, 7])
             tx = st.slider("Trục X", -image_ul.shape[1], image_ul.shape[1], 0)
             ty = st.slider("Trục Y", -image_ul.shape[1], image_ul.shape[1], 0)
             image = translate_image(image_ul, tx, ty)
