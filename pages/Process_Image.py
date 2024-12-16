@@ -22,24 +22,11 @@ def Introduce():
     )
 
 def flip_image_opencv(img, flip_code):
-  """
-  Lật ảnh sử dụng OpenCV.
 
-  Args:
-    image_path: Đường dẫn đến ảnh.
-    flip_code: Mã lật ảnh:
-      - 0: Lật theo chiều dọc (trên xuống dưới).
-      - 1: Lật theo chiều ngang (trái sang phải).
-      - -1: Lật theo cả hai chiều (đường chéo).
-
-  Returns:
-    Ảnh đã được lật hoặc None nếu có lỗi.
-  """
   try:
     flipped_img = cv.flip(img, flip_code)
     return flipped_img
   except Exception as e:
-    # st.warning(f"Lỗi: {e}")
     return None
 
 def Flip():
@@ -57,7 +44,7 @@ def Flip():
         if image_upload is not None:
             image_ul = np.array(Image.open(image_upload))
             image = None
-            c = st.columns([1.5, 1.5, 8])
+            c = st.columns([1.5, 1.5, 7])
             with c[0]:
                 if st.button("Lật ngang"):
                     image = flip_image_opencv(image_ul, 1)
@@ -107,7 +94,7 @@ def Rotation():
             image = None
             angel = 0
             angel = st.slider("Chọn góc xoay", 0, 360, 0)
-            c = st.columns([1.5, 1.5, 8])
+            c = st.columns([1.5, 1.5, 7])
             with c[0]:
                 if st.button("Xoay Trái"):
                     angel = -90
@@ -151,7 +138,7 @@ def Colorspace():
         if image_upload_color is not None:
             image_ul = np.array(Image.open(image_upload_color))
             image = None
-            c = st.columns([1.5, 1.5, 8])
+            c = st.columns([1.5, 1.5, 7])
             color_type = st.selectbox(
                 'Chọn một tùy chọn:',
                 ('BGR', 'Grayscale', 'HSV')
@@ -193,7 +180,7 @@ def Translation():
         if image_upload_color is not None:
             image_ul = np.array(Image.open(image_upload_color))
             image = None
-            c = st.columns([1.5, 1.5, 8])
+            c = st.columns([1.5, 1.5, 7])
             tx = st.slider("Trục X", -image_ul.shape[1], image_ul.shape[1], 0)
             ty = st.slider("Trục Y", -image_ul.shape[1], image_ul.shape[1], 0)
             image = translate_image(image_ul, tx, ty)
