@@ -3,6 +3,7 @@ import cv2 as cv
 import numpy as np
 from PIL import Image, ImageOps
 from io import BytesIO
+from streamlit_drawable_canvas import st_canvas
 
 st.set_page_config(
     page_title="🎈Hoang Hao's Applications",
@@ -12,41 +13,29 @@ st.set_page_config(
 )
 st.title("Process Image Application")
 
-def Introduce():
-    st.header("1. Giới thiệu")
-    st.markdown(
-                """
-                - Chào mừng đến với ứng dụng chỉnh sửa ảnh mạnh mẽ của chúng tôi! Ứng dụng này cho phép bạn dễ dàng biến đổi hình ảnh của mình với một loạt các công cụ chỉnh sửa chuyên nghiệp. 
-                Bạn có thể cắt (**Cropping**), xoay (**Rotation**), lật (**Flip**), điều chỉnh màu sắc(**Colorspace**) và di chuyển hình ảnh (**Translation**) chỉ với vài thao tác đơn giản. Hãy cùng khám phá các tính năng tuyệt vời này nhé!
-                """
-    )
-
 def flip_image_opencv(img, flip_code):
     flipped_img = cv.flip(img, flip_code)
     return flipped_img
   
 
-def Flip():
-    # st.markdown("#### 2.1 Flip (Lật ảnh)")
-    st.markdown(
-                """
-                - **Hướng dẫn sử dụng:**
-                    - Tải ảnh cần **Flip (lật ảnh)** ở phần **Browser.**
-                    - Nhấn vào nút **Lật Ngang** để lật ảnh theo chiều ngang. Nhấn vào nút **Lật Dọc** để lật ảnh theo chiều dọc.
-                """
-    )
-    cc = st.columns(2)
-    with cc[0]:
-        image_upload = st.file_uploader("Tải ảnh cần lật (Flip)", type=["png", "jpg", "jpeg"])
-        if image_upload is not None:
-            image_ul = np.array(Image.open(image_upload))
-            image = None
-            if st.button("Lật ngang"):
-                image = flip_image_opencv(image_ul, 1)
-            if st.button("Lật dọc"):
-                image = flip_image_opencv(image_ul, 0)
-            
-            if image is not None:
+def Flip(image_upload):
+    if image_upload is not None:
+        c = st.columns([2.5, 2.5, 4])
+        image_ul = np.array(Image.open(image_upload))
+        image = None
+        with c[0]:
+            st.markdown("**Ảnh gốc**")
+            st.image(image_ul)
+            cc = st.columns([4, 4, 2])
+            with cc[0]:
+                if st.button("Lật ngang"):
+                    image = flip_image_opencv(image_ul, 1)
+            with cc[1]:
+                if st.button("Lật dọc"):
+                    image = flip_image_opencv(image_ul, 0)
+        
+        if image is not None:
+            with c[1]:
                 st.markdown("**Ảnh sau khi lật**")
                 st.image(image)
                 result_image = Image.fromarray(image)
@@ -54,7 +43,7 @@ def Flip():
                 result_image.save(buf, format = "PNG")
                 byte_im = buf.getvalue()
                 if byte_im is not None:
-                    st.download_button("Download ảnh sau khi xử lí", byte_im, 'flip_result.png', "image/png")
+                    st.download_button("Download", byte_im, 'flip_result.png', "image/png")
 
 def rotate_image(image, angle):
     angle = -angle
@@ -70,30 +59,20 @@ def rotate_image(image, angle):
     
     return rotated_image
 
-def Rotation():
-    # st.markdown("#### 2.2 Rotation (Xoay ảnh)")
-    st.markdown(
-                """
-                - **Hướng dẫn sử dụng:**
-                    - Tải ảnh cần **Rotation (xoay ảnh)** ở phần **Browser.**
-                    - Sử dụng thanh trượt để chọn góc xoay. Hoặc nhập giá trị góc xoay vào ô bên cạnh. Nhấn nút **Xoay Trái** hoặc **Xoay Phải** để xoay nhanh **90** độ."
-                """
-    )
-    cc = st.columns(2)
-    with cc[0]:
-        image_upload_rotate = st.file_uploader("Tải ảnh cần xoay (Rotation)", type=["png", "jpg", "jpeg"])
-        if image_upload_rotate is not None:
-            image_ul = np.array(Image.open(image_upload_rotate))
-            image = None
-            angel = 0
-            angel = st.slider("Chọn góc xoay", 0, 360, 0)
-            # c = st.columns([1.5, 1.5, 7])
-            if st.button("Xoay Trái"):
-                angel = -90
-            if st.button("Xoay Phải"):
-                    angel = 90
-            image = rotate_image(image_ul, angel)
-            if image is not None:
+def Rotation(image_upload):
+    if image_upload is not None:
+        angel = st.slider("Chọn góc xoay", 0, 360, 0)
+        cc = st.columns([2.5, 2.5, 4])
+        image = None
+        with cc[0]:
+            image_ul = np.array(Image.open(image_upload))
+            st.markdown("**Ảnh gốc**")
+            st.image(image_ul)
+            c = st.columns([1.5, 1.5, 7])
+            if st.button("Apply"):
+                image = rotate_image(image_ul, angel)
+        if image is not None:
+            with cc[1]:
                 st.markdown("**Ảnh sau khi xoay**")
                 st.image(image)
                 result_image = Image.fromarray(image)
@@ -101,7 +80,7 @@ def Rotation():
                 result_image.save(buf, format = "PNG")
                 byte_im = buf.getvalue()
                 if byte_im is not None:
-                    st.download_button("Download ảnh sau khi xử lí", byte_im, 'rotation_result.png', "image/png")
+                    st.download_button("Download", byte_im, 'rotation_result.png', "image/png")
 
 def convert_colorspace(image, color_type):
     # if color_type == "BGR":
@@ -112,28 +91,22 @@ def convert_colorspace(image, color_type):
         image = cv.cvtColor(image, cv.COLOR_BGR2HSV)
     return image
 
-def Colorspace():
-    # st.markdown("#### 2.3 Colorspace (Điều chỉnh màu sắc)")
-    st.markdown(
-                """
-                - **Hướng dẫn sử dụng:**
-                    - Tải ảnh cần **Colorspace (Điều chỉnh màu sắc)** ở phần **Browser.**
-                    - Chọn không gian màu mong muốn từ danh sách: **BGR, Đen trắng (Grayscale), HSV**. Nhấn nút **Áp dụng** để chuyển đổi.
-                    - **Lưu ý:** "Chuyển đổi sang **Grayscale** sẽ loại bỏ thông tin màu sắc khỏi ảnh."
-                """
-    )
-    cc = st.columns(2)
-    with cc[0]:
-        image_upload_color = st.file_uploader("Tải ảnh cần điều chỉnh màu sắc", type=["png", "jpg", "jpeg"])
-        if image_upload_color is not None:
-            image_ul = np.array(Image.open(image_upload_color))
-            image = None
-            color_type = st.selectbox(
-                'Chọn một tùy chọn:',
+def Colorspace(image_upload):
+    color_type = st.selectbox(
+                'Chọn không gian màu',
                 ('BGR', 'Grayscale', 'HSV')
-)
-            image = convert_colorspace(image_ul, color_type)
-            if image is not None:
+            ) 
+    cc = st.columns([2.5, 2.5, 4])
+    if image_upload is not None:
+        image = None  
+        with cc[0]:
+            image_ul = np.array(Image.open(image_upload))
+            st.markdown("**Ảnh gốc**")
+            st.image(image_ul)
+            if st.button("Apply"):
+                image = convert_colorspace(image_ul, color_type)
+        if image is not None:
+            with cc[1]:
                 st.markdown("**Ảnh sau khi điều chỉnh màu sắc**")
                 st.image(image)
                 result_image = Image.fromarray(image)
@@ -141,7 +114,7 @@ def Colorspace():
                 result_image.save(buf, format = "PNG")
                 byte_im = buf.getvalue()
                 if byte_im is not None:
-                    st.download_button("Download ảnh sau khi xử lí", byte_im, 'colorspace_result.png', "image/png")
+                    st.download_button("Download", byte_im, 'colorspace_result.png', "image/png")
 
 def translate_image(image, tx, ty):
 
@@ -153,26 +126,20 @@ def translate_image(image, tx, ty):
 
   return translated_image
 
-def Translation():
-    # st.markdown("#### 2.4 Di chuyển hình ảnh (Translation)")
-    st.markdown(
-                """
-                - **Hướng dẫn sử dụng:**
-                    - Tải ảnh cần **Translation (Di chuyển)** ở phần **Browser.**
-                    - Nhập giá trị pixel bạn muốn di chuyển ảnh theo chiều ngang (trục X) và chiều dọc (trục Y) vào các ô tương ứng."
-                """
-    )
-    cc = st.columns(2)
-    with cc[0]:
-        image_upload_color = st.file_uploader("Tải ảnh cần di chuyển", type=["png", "jpg", "jpeg"])
-        if image_upload_color is not None:
-            image_ul = np.array(Image.open(image_upload_color))
-            image = None
-            # c = st.columns([1.5, 1.5, 7])
-            tx = st.slider("Trục X", -image_ul.shape[1], image_ul.shape[1], 0)
-            ty = st.slider("Trục Y", -image_ul.shape[1], image_ul.shape[1], 0)
-            image = translate_image(image_ul, tx, ty)
-            if image is not None:
+def Translation(image_upload):
+    if image_upload is not None:
+        image_ul = np.array(Image.open(image_upload))
+        tx = st.slider("Di chuyển theo chiều ngang", -image_ul.shape[1], image_ul.shape[1], 0)
+        ty = st.slider("Di chuyển theo chiều dọc", -image_ul.shape[1], image_ul.shape[1], 0)
+        cc = st.columns([2.5, 2.5, 4])
+        image = None
+        with cc[0]:
+            st.markdown("**Ảnh gốc**")
+            st.image(image_ul)
+            if st.button("Apply"):
+                image = translate_image(image_ul, tx, ty)
+        if image is not None:
+            with cc[1]:
                 st.markdown("**Ảnh sau khi di chuyển**")
                 st.image(image)
                 result_image = Image.fromarray(image)
@@ -180,34 +147,51 @@ def Translation():
                 result_image.save(buf, format = "PNG")
                 byte_im = buf.getvalue()
                 if byte_im is not None:
-                    st.download_button("Download ảnh sau khi xử lí", byte_im, 'translation_result.png', "image/png")
+                    st.download_button("Download", byte_im, 'translation_result.png', "image/png")
     
-def Cropping():
-    # st.markdown("#### 2.5 Cắt ảnh (Cropping)")
-    st.markdown(
-                """
-                - **Hướng dẫn sử dụng:**
-                    - Tải ảnh cần **Cropping (Cắt ảnh)** ở phần **Browser.**
-                    - Kéo các cạnh hoặc góc của khung cắt để điều chỉnh vùng chọn. Nhấn nút **Cắt** để cắt ảnh.
-                """
-    )
-    cc = st.columns(2)
-    with cc[0]:
-        image_upload_crop = st.file_uploader("Tải ảnh cần cắt", type=["png", "jpg", "jpeg"])
-        if image_upload_crop is not None:
-            image_ul = Image.open(image_upload_crop)
+def Cropping(image_upload):
+    st.markdown("**Kéo thả chuột để chọn vùng ảnh cần cắt**")
+    cc = st.columns([2.5, 2.5, 4])
+    if image_upload is not None:
+        image_ul = Image.open(image_upload)
+        with cc[0]:
             width, height = image_ul.size
-
-            x_min = st.slider("X min", 0, width - 1, 0)
-
-            y_min = st.slider("Y min", 0, height - 1, 0)
-
-            x_max = st.slider("X max", x_min + 1, width, width)
-
-            y_max = st.slider("Y max", y_min + 1, height, height)
-            cropped_img = image_ul.crop((x_min, y_min, x_max, y_max))
-            if cropped_img is not None:
-                st.markdown("**Ảnh sau khi di cắt**")
+            stroke_width = 3
+            stroke_color = "red"
+            drawing_mode = "rect"
+            canvas_result = st_canvas(
+                fill_color = "rgba(255, 165, 0, 0.3)",
+                stroke_width=stroke_width,
+                stroke_color = stroke_color,
+                background_image=image_ul,
+                # update_streamlit=realtime_update,
+                width = image_ul.width,
+                height = image_ul.height,
+                drawing_mode=drawing_mode,
+                key=image_upload.name,
+            )
+            rect = None
+            if canvas_result is not None and canvas_result.json_data is not None:
+                list_rect = []
+                for obj in canvas_result.json_data["objects"]:
+                    x = obj["left"] 
+                    y = obj["top"]
+                    
+                    width = obj["width"] 
+                    height = obj["height"] 
+                    min_x = int(x)
+                    min_y = int(y) 
+        
+                    rect = (min_x, min_y, min_x + int(width), min_y + int(height))
+            cropped_img = None
+            if st.button("Apply"):
+                if rect is not None:
+                    cropped_img = image_ul.crop(rect)
+                else:
+                    st.warning("Vui lòng chọn vùng ảnh cần cắt!")
+        if cropped_img is not None:
+            with cc[1]:
+                st.markdown("**Ảnh sau khi cắt**")
                 st.image(cropped_img)
                 cropped_img = np.array(cropped_img)
                 result_image = Image.fromarray(cropped_img)
@@ -215,22 +199,29 @@ def Cropping():
                 result_image.save(buf, format = "PNG")
                 byte_im = buf.getvalue()
                 if byte_im is not None:
-                    st.download_button("Download ảnh sau khi xử lí", byte_im, 'crop_result.png', "image/png")
+                    st.download_button("Download", byte_im, 'crop_result.png', "image/png")
 
 def Application():
-    st.header("2. Ứng dụng")
     c = st.columns(2)
-    select_box = st.selectbox("Chọn kĩ thuật xử lí ảnh", ("Flip", "Rotation", "Colorspace", "Translation", "Cropping"))
+    select_box = st.selectbox("**Chọn kĩ thuật xử lí ảnh**", ("Flip", "Rotation", "Colorspace", "Translation", "Cropping"))
+    image_upload = st.file_uploader("Tải ảnh lên", type=["png", "jpg", "jpeg"])
     if select_box == "Flip":
-        Flip()
+        Flip(image_upload)
     elif select_box == "Rotation":
-        Rotation()
+        Rotation(image_upload)
     elif select_box == "Colorspace":
-        Colorspace()
+        Colorspace(image_upload)
     elif select_box == "Translation":
-        Translation()
+        Translation(image_upload)
     elif select_box == "Cropping":
-        Cropping()
+        Cropping(image_upload)
+
+def Introduce():
+    st.markdown(
+                """
+                - Ứng dụng này dùng để xử lí hình ảnh bằng các kĩ thuật như: **Flip, Rotation, Colorspace, Translation và Cropping**
+                """
+    )
 def App():
     Introduce()
     Application()
