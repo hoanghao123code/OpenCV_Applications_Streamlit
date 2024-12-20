@@ -19,6 +19,7 @@ def flip_image_opencv(img, flip_code):
   
 
 def Flip(image_upload):
+    flip_option = st.selectbox("Chọn hướng lật", ("Lật ngang", "Lật dọc"))
     if image_upload is not None:
         c = st.columns([2.5, 2.5, 4])
         image_ul = np.array(Image.open(image_upload))
@@ -27,11 +28,10 @@ def Flip(image_upload):
             st.markdown("**Ảnh gốc**")
             st.image(image_ul)
             cc = st.columns([4, 4, 2])
-            with cc[0]:
-                if st.button("Lật ngang"):
+            if st.button("Apply"):
+                if flip_option == "Lật ngang":
                     image = flip_image_opencv(image_ul, 1)
-            with cc[1]:
-                if st.button("Lật dọc"):
+                else:
                     image = flip_image_opencv(image_ul, 0)
         
         if image is not None:
@@ -150,11 +150,11 @@ def Translation(image_upload):
                     st.download_button("Download", byte_im, 'translation_result.png', "image/png")
     
 def Cropping(image_upload):
-    st.markdown("**Kéo thả chuột để chọn vùng ảnh cần cắt**")
     cc = st.columns([2.5, 2.5, 4])
     if image_upload is not None:
         image_ul = Image.open(image_upload)
         with cc[0]:
+            st.markdown("**Kéo thả chuột để chọn vùng ảnh cần cắt**")
             width, height = image_ul.size
             stroke_width = 3
             stroke_color = "red"
